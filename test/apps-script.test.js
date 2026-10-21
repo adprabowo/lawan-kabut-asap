@@ -19,6 +19,15 @@ test('semua file .gs lolos parse', () => {
   }
 });
 
+test('kode tingkat atas tiap .gs tidak bergantung pada file lain (Apps Script memuat sesuai urutan editor)', () => {
+  // Hanya layanan Google bawaan yang tersedia saat file dimuat; konstanta file lain belum tentu ada.
+  const layanan = () => ({ PropertiesService: { getScriptProperties: () => ({}) } });
+  for (const f of fs.readdirSync(dir).filter((f) => f.endsWith('.gs'))) {
+    assert.doesNotThrow(() => vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'),
+      vm.createContext(layanan()), { filename: f }), f);
+  }
+});
+
 test('skema punya 7 tab sesuai rencana', () => {
   assert.deepEqual(Object.keys(ctx.SKEMA),
     ['ruang', 'oksigen', 'air_bersih', 'kontak_darurat', 'udara', 'faq', 'log']);

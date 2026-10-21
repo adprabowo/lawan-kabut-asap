@@ -6,8 +6,6 @@
  * POST {token, aksi: "status", kode, status, dari} → ubah status ruang
  */
 
-const STATUS_RUANG = SKEMA.ruang.pilihan.status;
-
 function doGet(e) {
   if (!tokenSah_(e.parameter.token)) return balasJson_({ ok: false, galat: 'token' });
   const ss = SpreadsheetApp.openById(PROP.getProperty('SHEET_ID'));
@@ -37,7 +35,8 @@ function doPost(e) {
 function ubahStatusRuang_(m) {
   const status = String(m.status || '').toUpperCase();
   const kode = String(m.kode || '').trim().toUpperCase();
-  if (STATUS_RUANG.indexOf(status) === -1) return { ok: false, galat: 'status' };
+  // SKEMA dibaca di dalam fungsi: Apps Script memuat file sesuai urutan di editor.
+  if (SKEMA.ruang.pilihan.status.indexOf(status) === -1) return { ok: false, galat: 'status' };
 
   const kunci = LockService.getScriptLock();
   kunci.waitLock(30000);

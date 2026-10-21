@@ -167,8 +167,8 @@ function siapkanFormLapor_(ss) {
     const url = form.createResponse().withItemResponse(respons).toPrefilledUrl();
     return /entry\.(\d+)=/.exec(url)[1];
   };
-  const entriBagian = entri(itemTab.asListItem().createResponse(judulDirektori[0]));
-  const entriKode = entri(itemId.asTextItem().createResponse('X'));
+  const entriBagian = entri(itemTab.createResponse(judulDirektori[0]));
+  const entriKode = entri(itemId.createResponse('X'));
   const templat = form.getPublishedUrl() + '?usp=pp_url' +
     '&entry.' + entriBagian + '={bagian}&entry.' + entriKode + '={kode}';
 
