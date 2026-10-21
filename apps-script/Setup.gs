@@ -51,6 +51,7 @@ function siapkan() {
   Object.keys(PERTANYAAN_FORM).forEach(function (tab) { siapkanFormDirektori_(ss, tab); });
   siapkanFormLapor_(ss);
   pasangPemicu_(ss);
+  if (!PROP.getProperty('API_TOKEN')) buatTokenApi();
   cetakRingkasan();
 }
 

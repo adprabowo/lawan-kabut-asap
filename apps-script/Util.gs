@@ -65,3 +65,60 @@ function normalkanNomorWa(nomor) {
   else if (s.indexOf('8') === 0) s = '62' + s;
   return s;
 }
+
+/** Nilai sel ke JSON: tanggal jadi ISO, sel kosong jadi null. */
+function nilaiJson_(v) {
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v.toISOString();
+  if (v === '' || v === undefined) return null;
+  return v;
+}
+
+/**
+ * Susun JSON publik dari isi Sheet. `lembar` berbentuk {tab: {header: [...], baris: [[...]]}}.
+ * Hanya kolom publik yang keluar; entri direktori hanya yang dicentang `tampil`;
+ * FAQ hanya yang sudah direview; udara hanya pembacaan terbaru per lokasi.
+ */
+function susunDataPublik(lembar, laporUrl) {
+  const hasil = { versi: 1 };
+  Object.keys(SKEMA).forEach(function (tab) {
+    if (tab === 'log') return;
+    const isi = lembar[tab] || { header: [], baris: [] };
+    const publik = kolomPublik(tab);
+    let baris = isi.baris.map(function (r) {
+      const o = {};
+      isi.header.forEach(function (k, i) { o[k] = r[i]; });
+      return o;
+    });
+
+    if (SKEMA[tab].direktori) {
+      baris = baris.filter(function (o) { return o.tampil === true && o.id; });
+    } else if (tab === 'faq') {
+      baris = baris.filter(function (o) { return o.direview_pada && o.pertanyaan && o.jawaban; });
+    } else if (tab === 'udara') {
+      const terbaru = {};
+      baris.forEach(function (o) {
+        if (!o.lokasi || o.ispu === '' || !(o.waktu instanceof Date)) return;
+        const lama = terbaru[o.lokasi];
+        if (!lama || o.waktu > lama.waktu) terbaru[o.lokasi] = o;
+      });
+      baris = Object.keys(terbaru).sort().map(function (k) { return terbaru[k]; });
+    }
+
+    hasil[tab] = baris.map(function (o) {
+      const p = {};
+      publik.forEach(function (k) { if (k in o) p[k] = nilaiJson_(o[k]); });
+      return p;
+    });
+  });
+  hasil.lapor_url = laporUrl || null;
+  return hasil;
+}
+
+/** Apakah nomor `dari` terdaftar di kolom pengelola_wa (boleh lebih dari satu, dipisah koma). */
+function bolehUbahStatus(pengelolaWa, dari) {
+  const pengirim = normalkanNomorWa(dari);
+  if (!pengirim) return false;
+  return String(pengelolaWa || '').split(/[,;\/]+/).some(function (n) {
+    return n && normalkanNomorWa(n) === pengirim;
+  });
+}

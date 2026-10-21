@@ -15,9 +15,6 @@ id = "ISI_SETELAH_MEMBUAT_NAMESPACE"
 WEB_URL = "https://siaga-asap-jambi.pages.dev"
 
 # Rahasia, isi dengan `npx wrangler secret put <NAMA>` (jangan ditulis di sini):
-#   APPS_SCRIPT_URL    URL web app Apps Script (/exec)
-#   APPS_SCRIPT_TOKEN  token rahasia yang sama dengan Script Property API_TOKEN
-#   WA_TOKEN           token akses WhatsApp Cloud API
-#   WA_PHONE_ID        Phone number ID bot
-#   WA_APP_SECRET      App secret Meta untuk cek X-Hub-Signature-256
-#   WA_VERIFY_TOKEN    token bebas untuk verifikasi webhook
+#   APPS_SCRIPT_URL    URL web app Apps Script (berakhiran /exec)
+#   APPS_SCRIPT_TOKEN  API_TOKEN dari Script Properties (dibuat otomatis oleh siapkan())
+#   BOT_TOKEN          token acak yang juga dipakai bot Baileys di VPS

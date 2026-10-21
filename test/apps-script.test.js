@@ -82,3 +82,58 @@ test('normalkanNomorWa', () => {
   assert.equal(ctx.normalkanNomorWa('+62 812 3456 7890'), '6281234567890');
   assert.equal(ctx.normalkanNomorWa('81234567890'), '6281234567890');
 });
+
+test('susunDataPublik: hanya entri tampil, kolom publik, FAQ direview, udara terbaru', () => {
+  const tgl = (s) => vm.runInContext(`new Date('${s}')`, ctx);
+  const hRuang = ctx.headerTab('ruang');
+  const barisRuang = (isi) => hRuang.map((k) => (k in isi ? isi[k] : ''));
+  const lembar = {
+    ruang: {
+      header: hRuang,
+      baris: [
+        barisRuang({ id: 'R001', kode: 'R001', nama: 'Masjid Agung', lat: -1.6, lng: 103.6, status: 'BUKA',
+          pengelola_wa: '6281200000000', tampil: true, catatan_internal: 'rahasia',
+          terverifikasi_oleh: 'a@b.c', terverifikasi_pada: tgl('2026-10-21T03:00:00Z') }),
+        barisRuang({ id: 'R002', nama: 'Belum dicek', tampil: false }),
+        barisRuang({ nama: 'Tanpa ID', tampil: true }),
+      ],
+    },
+    faq: {
+      header: ctx.headerTab('faq'),
+      baris: [
+        ['F001', 'Apa itu ISPA?', 'Infeksi saluran pernapasan akut.', 'ispa', 'dr. X', tgl('2026-10-20T00:00:00Z')],
+        ['F002', 'Draf', 'Belum direview', '', '', ''],
+      ],
+    },
+    udara: {
+      header: ctx.headerTab('udara'),
+      baris: [
+        [tgl('2026-10-21T01:00:00Z'), 'Kota Jambi', 180, 'Tidak Sehat', 'relawan'],
+        [tgl('2026-10-21T05:00:00Z'), 'Kota Jambi', 303, 'Berbahaya', 'relawan'],
+        [tgl('2026-10-21T04:00:00Z'), 'Muaro Jambi', 120, 'Tidak Sehat', 'relawan'],
+        ['', 'Bungo', 90, 'Sedang', 'tanpa waktu'],
+      ],
+    },
+  };
+  const d = JSON.parse(JSON.stringify(ctx.susunDataPublik(lembar, 'https://contoh/{bagian}/{kode}')));
+
+  assert.equal(d.ruang.length, 1);
+  const r = d.ruang[0];
+  assert.equal(r.id, 'R001');
+  assert.equal(r.terverifikasi_pada, '2026-10-21T03:00:00.000Z');
+  assert.equal(r.kecamatan, null);
+  for (const k of ['pengelola_wa', 'catatan_internal', 'terverifikasi_oleh', 'tampil']) assert.ok(!(k in r), k);
+  assert.deepEqual(d.oksigen, []);
+  assert.deepEqual(d.faq.map((f) => f.id), ['F001']);
+  assert.deepEqual(d.udara.map((u) => [u.lokasi, u.ispu]), [['Kota Jambi', 303], ['Muaro Jambi', 120]]);
+  assert.ok(!('log' in d));
+  assert.equal(d.lapor_url, 'https://contoh/{bagian}/{kode}');
+});
+
+test('bolehUbahStatus', () => {
+  assert.equal(ctx.bolehUbahStatus('0812 3456 7890', '6281234567890'), true);
+  assert.equal(ctx.bolehUbahStatus('628111, 0812-3456-7890', '+62 812 3456 7890'), true);
+  assert.equal(ctx.bolehUbahStatus('6281234567890', '6289999999999'), false);
+  assert.equal(ctx.bolehUbahStatus('', '6281234567890'), false);
+  assert.equal(ctx.bolehUbahStatus('6281234567890', ''), false);
+});

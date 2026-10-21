@@ -24,7 +24,7 @@ Pengelola ruang (WA) ──┘                                     │
 ## Status
 
 - [x] Hari 1: kerangka repo, skema Sheet 7 tab, Form input relawan dan Form lapor, pemicu ID/log
-- [ ] Hari 2: `doGet`/`doPost`, cron Worker ke KV, `/api/data`, `/api/terdekat`
+- [x] Hari 2: `doGet`/`doPost`, cron Worker ke KV, `/api/data`, `/api/terdekat`, `/api/status`
 - [ ] Hari 3: web v1 + PWA
 - [ ] Hari 4: bot WhatsApp v1
 - [ ] Hari 5–7: uji, peluncuran, peta, FAQ, serah terima
