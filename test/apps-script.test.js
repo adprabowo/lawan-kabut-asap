@@ -102,6 +102,13 @@ test('uraiKoordinat memilih titik penanda tempat, bukan titik tengah peta', () =
   assert.deepEqual(JSON.parse(JSON.stringify(ctx.uraiKoordinat(url))), { lat: -1.6275502, lng: 103.5877286 });
 });
 
+test('indeksBarisKosong: lompati baris berisi, abaikan kotak centang FALSE di bawahnya', () => {
+  assert.equal(ctx.indeksBarisKosong(['R001', '', ''], ['Yayasan', '', '']), 1);
+  assert.equal(ctx.indeksBarisKosong(['', ''], ['Diisi manual tanpa id', '']), 1);
+  assert.equal(ctx.indeksBarisKosong(['R001', 'R002'], ['A', 'B']), 2);
+  assert.equal(ctx.indeksBarisKosong([], []), 0);
+});
+
 test('ambilTautanPendek', () => {
   assert.equal(ctx.ambilTautanPendek('lihat https://maps.app.goo.gl/tuqcw3VXwXDG9x3X9 ya'), 'https://maps.app.goo.gl/tuqcw3VXwXDG9x3X9');
   assert.equal(ctx.ambilTautanPendek('https://goo.gl/maps/AbC123'), 'https://goo.gl/maps/AbC123');

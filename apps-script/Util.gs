@@ -41,6 +41,17 @@ function uraiKoordinat(teks) {
   return null;
 }
 
+/**
+ * Indeks baris pertama (0 = baris 2 di Sheet) yang kolom id dan namanya kosong.
+ * Bila semua terisi, mengembalikan panjang daftar (baris setelah yang terakhir).
+ */
+function indeksBarisKosong(ids, nama) {
+  for (let i = 0; i < ids.length; i++) {
+    if (!ids[i] && !(nama && nama[i])) return i;
+  }
+  return ids.length;
+}
+
 /** Tautan pendek Google Maps (dari tombol "Bagikan") di dalam teks, atau '' bila tidak ada. */
 function ambilTautanPendek(teks) {
   const m = /https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps)\/[A-Za-z0-9_-]+/.exec(String(teks || ''));

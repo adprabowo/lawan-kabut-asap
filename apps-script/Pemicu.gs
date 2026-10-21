@@ -50,7 +50,12 @@ function tambahEntri_(tab, jawaban) {
   jawaban.diubah_pada = sekarang;
   jawaban.tampil = false;
 
-  sh.appendRow(header.map(function (k) { return jawaban[k] === undefined ? '' : jawaban[k]; }));
+  // Kotak centang `tampil` sudah terpasang sampai baris terbawah dan bernilai FALSE, sehingga
+  // appendRow() akan menulis di bawah semua baris itu. Tulis di baris kosong pertama.
+  const nomorBaris = indeksBarisKosong(nilaiKolom_(sh, header, 'id'), nilaiKolom_(sh, header, 'nama')) + 2;
+  if (nomorBaris > sh.getMaxRows()) sh.insertRowsAfter(sh.getMaxRows(), 1);
+  sh.getRange(nomorBaris, 1, 1, header.length)
+    .setValues([header.map(function (k) { return jawaban[k] === undefined ? '' : jawaban[k]; })]);
   tulisLog_(tab, id, '(baru)', '', jawaban.nama || '', 'Google Form');
 }
 
