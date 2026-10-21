@@ -2,19 +2,42 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Siaga Asap Jambi</title>
-  <meta name="description" content="Ruang aman asap, oksigen, air bersih, dan kontak darurat di Provinsi Jambi.">
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 0; padding: 24px 16px; background: #fff; color: #1a1a1a; }
-    main { max-width: 480px; margin: 0 auto; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lawan Kabut Asap Jambi</title>
+  <meta name="description" content="Ruang aman asap, oksigen, air bersih, kontak darurat, dan panduan kesehatan saat kabut asap di Provinsi Jambi.">
+  <meta name="theme-color" content="#0f5132">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <main>
-    <h1>Siaga Asap Jambi</h1>
-    <p>Segera hadir: direktori ruang aman asap, oksigen, air bersih, dan kontak darurat.</p>
-    <p>Dalam keadaan darurat hubungi <a href="tel:112">112</a> atau <a href="tel:119">119</a>.</p>
+  <a class="lewati" href="#isi">Lewati ke isi</a>
+  <header class="kepala">
+    <a href="#/" class="merek" aria-label="Beranda Lawan Kabut Asap">
+      <img src="/icon.svg" alt="" width="32" height="32">
+      <span><strong>Lawan Kabut Asap</strong><small>Siaga Asap Jambi</small></span>
+    </a>
+  </header>
+
+  <div id="pita" class="pita" hidden></div>
+
+  <main id="isi" tabindex="-1">
+    <p class="memuat">Memuat data…</p>
   </main>
+
+  <nav class="darurat" aria-label="Nomor darurat">
+    <a href="tel:112" class="tombol-darurat">📞 112 Darurat</a>
+    <a href="tel:119" class="tombol-darurat">🚑 119 Ambulans</a>
+  </nav>
+
+  <footer class="kaki">
+    <p>Program Siaga Asap IA-ITB Jambi 2026 · Data dari relawan, diverifikasi sebelum tampil.</p>
+    <p>Informasi kesehatan di sini bersifat umum, bukan pengganti pemeriksaan tenaga kesehatan.</p>
+    <p><a href="https://github.com/adprabowo/lawan-kabut-asap">Kode terbuka (MIT)</a></p>
+  </footer>
+
+  <script src="/panduan.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>

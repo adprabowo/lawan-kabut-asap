@@ -141,6 +141,15 @@ test('/api/status menolak status tidak dikenal dan meneruskan penolakan Apps Scr
   assert.equal((await res.json()).galat, 'bukan_pengelola');
 });
 
+test('/api/data memakai data contoh hanya bila MODE_CONTOH=1 dan KV kosong', async () => {
+  globalThis.fetch = async () => { throw new Error('tidak boleh memanggil Apps Script'); };
+  let res = await worker.fetch(req('/api/data'), { ...env, MODE_CONTOH: '1' }, ctx);
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).contoh, true);
+  res = await worker.fetch(req('/api/data'), { ...env, MODE_CONTOH: '0' }, ctx);
+  assert.equal(res.status, 503);
+});
+
 test('rute tidak dikenal 404', async () => {
-  assert.equal((await worker.fetch(req('/webhook'), env, ctx)).status, 404);
+  assert.equal((await worker.fetch(req('/api/webhook'), env, ctx)).status, 404);
 });

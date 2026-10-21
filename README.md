@@ -5,19 +5,18 @@ oksigen, air bersih, kontak darurat, status udara, dan panduan ISPA. Bagian dari
 Asap IA-ITB Jambi 2026. Dibangun di paket gratis Google dan Cloudflare.
 
 ```
-Relawan ─ Google Form ─┐
-                       ├─ Google Sheet (privat) ─ Apps Script doGet (kolom publik, ber-token)
-Pengelola ruang (WA) ──┘                                     │
-                                                  Cloudflare Worker (cron 5 menit → 1 key KV)
-                                                    ├─ /api/data, /api/terdekat ─ Web (Pages)
-                                                    └─ /webhook ─ WhatsApp Cloud API
+Relawan ─ Google Form ─ Google Sheet (privat) ─ Apps Script doGet (kolom publik, ber-token)
+                                                             │ cron 5 menit → 1 key KV
+              Warga ─ lawan-kabut-asap.<subdomain>.workers.dev (satu Worker: web/ + /api/*)
+              Bot WhatsApp ─ /api/data, /api/status
 ```
 
 | Folder | Isi |
 | --- | --- |
 | `apps-script/` | Skema Sheet, pembuat Form, pemicu ID/waktu/log; nanti `doGet` dan `doPost` |
-| `worker/` | Cloudflare Worker: API, cron, webhook WhatsApp |
-| `web/` | Web statis + PWA untuk Cloudflare Pages |
+| `worker/` | Cloudflare Worker: melayani web dan API, cron tarik data |
+| `web/` | Web statis + PWA (dilayani Worker lewat static assets) |
+| `scripts/` | `deploy.sh` |
 | `test/` | Uji fungsi murni (`npm test`, Node 20+) |
 | `docs/` | Panduan penyiapan dan runbook |
 
@@ -25,11 +24,11 @@ Pengelola ruang (WA) ──┘                                     │
 
 - [x] Hari 1: kerangka repo, skema Sheet 7 tab, Form input relawan dan Form lapor, pemicu ID/log
 - [x] Hari 2: `doGet`/`doPost`, cron Worker ke KV, `/api/data`, `/api/terdekat`, `/api/status`
-- [ ] Hari 3: web v1 + PWA
+- [x] Hari 3: web MVP + PWA (data contoh sampai Sheet tersambung)
 - [ ] Hari 4: bot WhatsApp v1
 - [ ] Hari 5–7: uji, peluncuran, peta, FAQ, serah terima
 
-Langkah penyiapan akun dan Sheet ada di [docs/SETUP.md](docs/SETUP.md).
+Langkah deploy: [docs/DEPLOY.md](docs/DEPLOY.md). Alur relawan: [docs/SETUP.md](docs/SETUP.md).
 
 ## Data dan privasi
 

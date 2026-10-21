@@ -1,5 +1,5 @@
 /**
- * Worker Siaga Asap Jambi: satu API untuk web dan bot WhatsApp (Baileys di VPS).
+ * Worker Lawan Kabut Asap: web statis (folder web/, lewat [assets]) dan API untuk web dan bot.
  *
  * GET  /api/data                         seluruh data publik (dari satu key KV)
  * GET  /api/terdekat?lat=&lng=&jenis=&n=  entri terdekat: ruang | oksigen
@@ -8,6 +8,7 @@
  * cron tiap 5 menit                      tarik data dari Apps Script
  */
 import { bacaData, kirimStatus, segarkan } from './data.js';
+import { dataContoh } from './data-contoh.js';
 import { terdekat } from './geo.js';
 
 const JENIS_TERDEKAT = ['ruang', 'oksigen'];
@@ -37,8 +38,15 @@ function botSah(request, env) {
   return Boolean(env.BOT_TOKEN) && samaPersis(auth, `Bearer ${env.BOT_TOKEN}`);
 }
 
-async function apiData(env) {
+/** Data dari KV; selama KV kosong dan MODE_CONTOH = "1", pakai data contoh untuk demo. */
+async function ambilData(env) {
   const data = await bacaData(env);
+  if (data || env.MODE_CONTOH !== '1') return data;
+  return { teks: JSON.stringify(dataContoh()), metadata: {} };
+}
+
+async function apiData(env) {
+  const data = await ambilData(env);
   if (!data) return json({ galat: 'Data belum tersedia' }, 503);
   return new Response(data.teks, {
     headers: {
@@ -61,7 +69,7 @@ async function apiTerdekat(url, env) {
   if (!JENIS_TERDEKAT.includes(jenis)) {
     return json({ galat: `jenis harus salah satu dari: ${JENIS_TERDEKAT.join(', ')}` }, 400);
   }
-  const data = await bacaData(env);
+  const data = await ambilData(env);
   if (!data) return json({ galat: 'Data belum tersedia' }, 503);
   const semua = JSON.parse(data.teks)[jenis] || [];
   return json({ jenis, hasil: terdekat(semua, lat, lng, n) }, 200, { 'Cache-Control': 'public, max-age=60' });
@@ -92,8 +100,6 @@ export default {
 
     const rute = `${request.method} ${url.pathname}`;
     switch (rute) {
-      case 'GET /':
-        return json({ layanan: 'Siaga Asap Jambi API', web: env.WEB_URL });
       case 'GET /api/data':
         return apiData(env);
       case 'GET /api/terdekat':

@@ -1,8 +1,15 @@
-name = "siaga-asap-jambi"
+name = "lawan-kabut-asap"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
-# Tarik data dari Apps Script tiap 5 menit (Hari 2).
+# Web statis (folder web/) dan API dilayani satu Worker: lawan-kabut-asap.<subdomain-akun>.workers.dev
+# Hanya /api/* yang menjalankan kode Worker; file web dilayani langsung tanpa memakai kuota request Worker.
+[assets]
+directory = "../web"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+# Tarik data dari Apps Script tiap 5 menit.
 [triggers]
 crons = ["*/5 * * * *"]
 
@@ -12,9 +19,10 @@ binding = "DATA"
 id = "ISI_SETELAH_MEMBUAT_NAMESPACE"
 
 [vars]
-WEB_URL = "https://siaga-asap-jambi.pages.dev"
+# "1" = /api/data memakai data contoh selama KV masih kosong (untuk demo). Set "0" sebelum peluncuran.
+MODE_CONTOH = "1"
 
 # Rahasia, isi dengan `npx wrangler secret put <NAMA>` (jangan ditulis di sini):
 #   APPS_SCRIPT_URL    URL web app Apps Script (berakhiran /exec)
 #   APPS_SCRIPT_TOKEN  API_TOKEN dari Script Properties (dibuat otomatis oleh siapkan())
-#   BOT_TOKEN          token acak yang juga dipakai bot Baileys di VPS
+#   BOT_TOKEN          token acak untuk bot WhatsApp
