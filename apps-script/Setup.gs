@@ -25,10 +25,11 @@ const LABEL_FORM = {
   stok: 'Stok saat ini',
   telepon: 'Nomor telepon',
   jam_layanan: 'Jam layanan',
+  biaya: 'Biaya (contoh: gratis, atau Rp 150.000 dalam kota)',
   catatan_internal: 'Catatan untuk relawan verifikasi (tidak ditampilkan ke publik)',
 };
 
-// Urutan pertanyaan Form per tab direktori.
+// Urutan pertanyaan Form per tab direktori. Tab tanpa entri di sini (donasi) tidak punya Form.
 const PERTANYAAN_FORM = {
   ruang: ['nama', 'jenis', 'kabupaten', 'kecamatan', 'alamat', 'lokasi', 'layanan', 'jam_buka',
     'kapasitas', 'status', 'pengelola_wa', 'catatan_internal'],
@@ -36,8 +37,8 @@ const PERTANYAAN_FORM = {
     'harga', 'wilayah_antar', 'stok', 'catatan_internal'],
   air_bersih: ['nama', 'jenis', 'kabupaten', 'kecamatan', 'kontak_publik', 'harga',
     'wilayah_layanan', 'catatan_internal'],
-  kontak_darurat: ['nama', 'jenis', 'kabupaten', 'alamat', 'telepon', 'jam_layanan',
-    'catatan_internal'],
+  kontak_darurat: ['nama', 'jenis', 'kabupaten', 'kecamatan', 'alamat', 'lokasi', 'telepon',
+    'jam_layanan', 'layanan', 'wilayah_layanan', 'biaya', 'catatan_internal'],
 };
 
 const WAJIB_FORM = ['nama', 'jenis', 'kabupaten'];
@@ -48,7 +49,10 @@ function siapkan() {
   const ss = ambilSpreadsheet_();
   Object.keys(SKEMA).forEach(function (tab) { siapkanTab_(ss, tab); });
   hapusLembarBawaan_(ss);
-  Object.keys(PERTANYAAN_FORM).forEach(function (tab) { siapkanFormDirektori_(ss, tab); });
+  Object.keys(PERTANYAAN_FORM).forEach(function (tab) {
+    siapkanFormDirektori_(ss, tab);
+    lengkapiForm_(tab);
+  });
   siapkanFormLapor_(ss);
   pasangPemicu_(ss);
   if (!PROP.getProperty('API_TOKEN')) buatTokenApi();
@@ -94,7 +98,9 @@ function siapkanTab_(ss, tab) {
       badan.setDataValidation(SpreadsheetApp.newDataValidation()
         .requireValueInList(s.pilihan[k], true).setAllowInvalid(false).build());
     }
-    if (k === 'tampil') badan.insertCheckboxes();
+    // Validasi kotak centang, bukan insertCheckboxes(): yang terakhir mengosongkan semua centang
+    // setiap kali siapkan() dijalankan ulang, sehingga data terverifikasi hilang dari web.
+    if (k === 'tampil') badan.setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build());
     if (KOLOM_WAKTU.indexOf(k) !== -1) badan.setNumberFormat('yyyy-mm-dd hh:mm');
     if (k === 'lat' || k === 'lng') badan.setNumberFormat('0.000000');
     // Nomor telepon disimpan sebagai teks supaya angka 0 di depan tidak hilang.
@@ -121,7 +127,7 @@ function siapkanFormDirektori_(ss, tab) {
   if (PROP.getProperty(kunci)) return;
 
   const s = SKEMA[tab];
-  const form = FormApp.create('Input Data: ' + s.judul + ' — Siaga Asap Jambi');
+  const form = FormApp.create(judulForm_(s));
   form.setDescription('Formulir relawan Siaga Asap Jambi. Data baru tidak langsung tampil: ' +
     'relawan verifikasi akan mengecek dulu sebelum mencentang kolom "tampil".');
   form.setCollectEmail(false);
@@ -129,24 +135,61 @@ function siapkanFormDirektori_(ss, tab) {
 
   const peta = {};
   PERTANYAAN_FORM[tab].forEach(function (k) {
-    const label = LABEL_FORM[k];
-    let item;
-    if (s.pilihan[k]) {
-      item = form.addListItem().setTitle(label).setChoiceValues(s.pilihan[k]);
-    } else if (s.pilihanGanda && s.pilihanGanda[k]) {
-      item = form.addCheckboxItem().setTitle(label).setChoiceValues(s.pilihanGanda[k]);
-    } else if (PARAGRAF_FORM.indexOf(k) !== -1) {
-      item = form.addParagraphTextItem().setTitle(label);
-    } else {
-      item = form.addTextItem().setTitle(label);
-    }
-    if (WAJIB_FORM.indexOf(k) !== -1) item.setRequired(true);
-    peta[item.getId()] = k;
+    peta[tambahPertanyaan_(form, s, k).getId()] = k;
   });
 
   PROP.setProperty(kunci, form.getId());
   PROP.setProperty('PETA_' + form.getId(), JSON.stringify({ tab: tab, item: peta }));
   pindahkanKeFolderSheet_(ss, form.getId());
+}
+
+function judulForm_(s) {
+  return 'Input Data: ' + (s.judulForm || s.judul) + ' — Siaga Asap Jambi';
+}
+
+function tambahPertanyaan_(form, s, k) {
+  const label = LABEL_FORM[k];
+  let item;
+  if (s.pilihan[k]) {
+    item = form.addListItem().setTitle(label).setChoiceValues(s.pilihan[k]);
+  } else if (s.pilihanGanda && s.pilihanGanda[k]) {
+    item = form.addCheckboxItem().setTitle(label).setChoiceValues(s.pilihanGanda[k]);
+  } else if (PARAGRAF_FORM.indexOf(k) !== -1) {
+    item = form.addParagraphTextItem().setTitle(label);
+  } else {
+    item = form.addTextItem().setTitle(label);
+  }
+  if (WAJIB_FORM.indexOf(k) !== -1) item.setRequired(true);
+  return item;
+}
+
+/**
+ * Form yang sudah ada mendapat pertanyaan yang baru ditambahkan ke PERTANYAAN_FORM,
+ * di posisi sesuai urutannya. Jawaban lama tidak berubah.
+ */
+function lengkapiForm_(tab) {
+  const formId = PROP.getProperty('FORM_' + tab);
+  if (!formId) return;
+  const kunciPeta = 'PETA_' + formId;
+  const peta = JSON.parse(PROP.getProperty(kunciPeta));
+  const form = FormApp.openById(formId);
+  const s = SKEMA[tab];
+  if (form.getTitle() !== judulForm_(s)) form.setTitle(judulForm_(s));
+
+  const itemUntuk = function (kolom) {
+    const id = Object.keys(peta.item).filter(function (i) { return peta.item[i] === kolom; })[0];
+    return id ? form.getItemById(Number(id)) : null;
+  };
+
+  const urutan = PERTANYAAN_FORM[tab];
+  urutan.forEach(function (k, i) {
+    if (itemUntuk(k)) return;
+    const item = tambahPertanyaan_(form, s, k);
+    peta.item[item.getId()] = k;
+    const sebelum = i > 0 ? itemUntuk(urutan[i - 1]) : null;
+    form.moveItem(item.getIndex(), sebelum ? sebelum.getIndex() + 1 : 0);
+  });
+  PROP.setProperty(kunciPeta, JSON.stringify(peta));
 }
 
 function siapkanFormLapor_(ss) {

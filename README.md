@@ -26,6 +26,7 @@ Relawan ─ Google Form ─ Google Sheet (privat) ─ Apps Script doGet (kolom p
 - [x] Hari 1: kerangka repo, skema Sheet 7 tab, Form input relawan dan Form lapor, pemicu ID/log
 - [x] Hari 2: `doGet`/`doPost`, cron Worker ke KV, `/api/data`, `/api/terdekat`, `/api/status`
 - [x] Hari 3: web MVP + PWA (data contoh sampai Sheet tersambung)
+- [x] Menu rumah sakit/faskes, ambulans, edukasi (8 materi), dan donasi
 - [ ] Hari 4: bot WhatsApp v1
 - [ ] Hari 5–7: uji, peluncuran, peta, FAQ, serah terima
 

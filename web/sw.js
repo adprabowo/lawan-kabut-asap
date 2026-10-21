@@ -1,5 +1,5 @@
 // Service worker: tampilan web tetap terbuka saat sinyal lemah. Data disimpan oleh app.js.
-const CACHE = 'lka-v2';
+const CACHE = 'lka-v3';
 const CANGKANG = [
   '/', '/index.html', '/style.css', '/app.js', '/ikon.js', '/panduan.js', '/icon.svg', '/manifest.webmanifest',
   '/fonts/archivo-tampil.woff2', '/fonts/plus-jakarta-sans.woff2',

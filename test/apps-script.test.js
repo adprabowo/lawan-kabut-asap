@@ -28,9 +28,26 @@ test('kode tingkat atas tiap .gs tidak bergantung pada file lain (Apps Script me
   }
 });
 
-test('skema punya 7 tab sesuai rencana', () => {
+test('skema punya 8 tab: 7 tab rencana awal ditambah donasi', () => {
   assert.deepEqual(Object.keys(ctx.SKEMA),
-    ['ruang', 'oksigen', 'air_bersih', 'kontak_darurat', 'udara', 'faq', 'log']);
+    ['ruang', 'oksigen', 'air_bersih', 'kontak_darurat', 'donasi', 'udara', 'faq', 'log']);
+});
+
+test('setiap pertanyaan Form punya label dan kolom tujuan di skema', () => {
+  const ctxSetup = vm.createContext({ PropertiesService: { getScriptProperties: () => ({}) } });
+  for (const f of ['Skema.gs', 'Setup.gs']) {
+    const kode = fs.readFileSync(path.join(dir, f), 'utf8').replace(/^const /gm, 'var ');
+    vm.runInContext(kode, ctxSetup, { filename: f });
+  }
+  for (const [tab, daftar] of Object.entries(ctxSetup.PERTANYAAN_FORM)) {
+    const header = ctxSetup.headerTab(tab);
+    for (const k of daftar) {
+      assert.ok(ctxSetup.LABEL_FORM[k], `label ${tab}.${k}`);
+      if (k === 'lokasi') assert.ok(header.includes('lat') && header.includes('lng'), `${tab} butuh lat/lng`);
+      else assert.ok(header.includes(k), `kolom ${tab}.${k}`);
+    }
+  }
+  assert.ok(!('donasi' in ctxSetup.PERTANYAAN_FORM), 'donasi tidak boleh punya Form publik');
 });
 
 test('kolom privat tidak keluar lewat kolomPublik', () => {

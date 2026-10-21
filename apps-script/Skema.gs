@@ -75,16 +75,36 @@ const SKEMA = {
       kabupaten: KABUPATEN,
     },
   },
+  // Web memecah tab ini menjadi tiga menu menurut jenis: faskes, ambulans, dan kontak lain.
   kontak_darurat: {
     judul: 'Kontak Darurat',
+    judulForm: 'Faskes, Ambulans, dan Kontak Darurat',
     direktori: true,
     awalanId: 'K',
     cekUlangHari: 14,
-    kolom: ['id', 'nama', 'jenis', 'kabupaten', 'alamat', 'telepon', 'jam_layanan'],
+    kolom: ['id', 'nama', 'jenis', 'kabupaten', 'kecamatan', 'alamat', 'lat', 'lng', 'telepon', 'jam_layanan',
+      'layanan', 'wilayah_layanan', 'biaya'],
     pilihan: {
       jenis: ['Rumah sakit', 'Puskesmas', 'Klinik', 'Ambulans', 'BPBD', 'Damkar', 'Polisi',
         'Posko kesehatan', 'Lainnya'],
       kabupaten: KABUPATEN,
+    },
+    pilihanGanda: {
+      layanan: ['IGD 24 jam', 'Poli paru', 'Poli anak', 'Nebulizer', 'Oksigen', 'Rawat inap', 'Ambulans'],
+    },
+  },
+  // Diisi pengurus langsung di Sheet (tanpa Form publik). "Barang" = kebutuhan dengan target dan
+  // jumlah terkumpul; "Rekening" = saluran donasi uang (nama bank di `nama`, nomor di `detail`).
+  donasi: {
+    judul: 'Donasi',
+    direktori: true,
+    awalanId: 'D',
+    cekUlangHari: 3,
+    kolom: ['id', 'jenis', 'nama', 'detail', 'atas_nama', 'target', 'terkumpul', 'satuan', 'prioritas',
+      'lokasi_antar', 'kontak_publik'],
+    pilihan: {
+      jenis: ['Barang', 'Rekening'],
+      prioritas: ['Mendesak', 'Tinggi', 'Biasa'],
     },
   },
   udara: {

@@ -31,7 +31,7 @@ Atau lewat clasp: `npm i -g @google/clasp`, `clasp login`, `clasp create --type 
 `siapkan()` aman dijalankan ulang. Hasilnya:
 
 - Sheet **Siaga Asap Jambi — Data** dengan tab `ruang`, `oksigen`, `air_bersih`,
-  `kontak_darurat`, `udara`, `faq`, `log`. Header merah = kolom privat.
+  `kontak_darurat`, `donasi`, `udara`, `faq`, `log`. Header merah = kolom privat.
 - Form **Input Data** untuk 4 tab direktori, dan Form **Laporkan Data Salah**.
 - Pemicu: jawaban Form masuk ke tab dengan ID tetap (`R001`, `O001`, `A001`, `K001`);
   setiap suntingan Sheet mencatat waktu ubah dan riwayat di `log`.
@@ -49,3 +49,46 @@ Atau lewat clasp: `npm i -g @google/clasp`, `clasp login`, `clasp create --type 
    Hanya FAQ yang sudah direview yang nanti ditampilkan.
 
 Bagikan Sheet (Editor) hanya ke relawan verifikasi. Relawan lain cukup diberi tautan Form.
+
+## 4. Faskes, ambulans, dan kontak darurat
+
+Ketiganya diisi lewat satu Form, **Input Data: Faskes, Ambulans, dan Kontak Darurat**. Web memecahnya
+menurut pilihan **Jenis**:
+
+| Jenis | Muncul di menu web |
+| --- | --- |
+| Rumah sakit, Puskesmas, Klinik, Posko kesehatan | Rumah sakit |
+| Ambulans | Ambulans |
+| BPBD, Damkar, Polisi, Lainnya | Kontak darurat |
+
+Isi **titik lokasi** untuk faskes supaya warga bisa mengurutkan dari yang terdekat dan membuka
+petunjuk arah. Centang **IGD 24 jam** di bagian layanan bila ada. Untuk ambulans, isi
+**wilayah layanan** dan **biaya**. Nomor darurat nasional (112, 119, 113, 110) sudah tampil otomatis,
+jadi tidak perlu dimasukkan.
+
+## 5. Donasi (khusus pengurus)
+
+Tab `donasi` tidak punya Form publik. Pengurus mengisinya langsung di Sheet, lalu relawan
+verifikasi mencentang `tampil` setelah mengecek.
+
+| Kolom | Jenis "Barang" | Jenis "Rekening" |
+| --- | --- | --- |
+| `nama` | Nama barang, misalnya Masker N95 | Nama bank atau dompet digital |
+| `detail` | Keterangan, misalnya ukuran | Nomor rekening |
+| `atas_nama` | (kosong) | Nama pemilik rekening resmi |
+| `target`, `terkumpul`, `satuan` | Angka kebutuhan dan yang sudah terkumpul | (kosong) |
+| `prioritas` | Mendesak, Tinggi, atau Biasa | (kosong) |
+| `lokasi_antar` | Alamat posko penerima barang | (kosong) |
+| `kontak_publik` | WhatsApp koordinator logistik | WhatsApp untuk konfirmasi donasi |
+
+Perbarui `terkumpul` setiap ada barang masuk; web menampilkannya sebagai batang progres. Hanya
+masukkan rekening atas nama organisasi, bukan rekening pribadi.
+
+## 6. Memperbarui Apps Script dari repo
+
+Setiap kali kode di folder `apps-script/` berubah:
+
+1. Salin ulang semua file `.gs` dan `appsscript.json` ke editor Apps Script.
+2. Jalankan `siapkan()`. Fungsi ini menambah kolom dan tab baru, menambah pertanyaan baru ke Form
+   yang sudah ada, dan tidak mengubah data atau centang `tampil` yang sudah ada.
+3. **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**. URL `/exec` tetap sama.

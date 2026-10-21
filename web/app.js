@@ -38,15 +38,56 @@
         tautan: '#/', label: 'Kembali ke beranda',
       },
     },
-    kontak: {
-      tab: 'kontak_darurat', judul: 'Kontak Darurat', judulLapor: 'Kontak Darurat', ikon: 'sirene', satuan: 'kontak',
+    // Tiga menu berikut berbagi tab kontak_darurat dan dipisah menurut kolom `jenis`.
+    faskes: {
+      tab: 'kontak_darurat', judul: 'Rumah Sakit dan Faskes', judulLapor: 'Kontak Darurat', ikon: 'rs',
+      terdekat: true, satuan: 'faskes',
+      saring: function (e) { return JENIS_FASKES.indexOf(e.jenis) !== -1; },
+      utamakan: function (e) { return /IGD 24 jam/.test(e.layanan || '') ? 0 : 1; },
       kosong: {
         judul: 'Daftar faskes sedang disiapkan',
-        teks: 'Nomor darurat nasional di atas bisa dipakai kapan saja.',
+        teks: 'Relawan sedang mendata rumah sakit, puskesmas, klinik, dan posko kesehatan. Untuk keadaan gawat darurat, telepon 119.',
+        tautan: 'tel:119', label: 'Telepon 119',
+      },
+    },
+    ambulans: {
+      tab: 'kontak_darurat', judul: 'Ambulans', judulLapor: 'Kontak Darurat', ikon: 'ambulans',
+      satuan: 'layanan ambulans', telDarurat: true, nasional: ['119'],
+      saring: function (e) { return e.jenis === 'Ambulans'; },
+      kosong: {
+        judul: 'Layanan ambulans setempat sedang didata',
+        teks: 'Sementara itu, telepon 119 untuk ambulans gawat darurat. Layanan ini tersedia 24 jam.',
         tautan: '#/panduan/ispa', label: 'Kenali tanda bahaya ISPA',
       },
     },
+    kontak: {
+      tab: 'kontak_darurat', judul: 'Kontak Darurat', judulLapor: 'Kontak Darurat', ikon: 'sirene',
+      satuan: 'kontak lain', telDarurat: true, nasional: ['112', '119', '113', '110'],
+      saring: function (e) { return JENIS_FASKES.indexOf(e.jenis) === -1 && e.jenis !== 'Ambulans'; },
+      kosong: {
+        judul: 'Kontak lain sedang disiapkan',
+        teks: 'Nomor darurat nasional di atas bisa dipakai kapan saja.',
+        tautan: '#/faskes', label: 'Lihat rumah sakit dan faskes',
+      },
+    },
   };
+
+  const JENIS_FASKES = ['Rumah sakit', 'Puskesmas', 'Klinik', 'Posko kesehatan'];
+
+  // Menu beranda: 4 x 2 ikon. Warna menandai kelompok: tempat dan pasokan, medis dan darurat,
+  // edukasi, donasi.
+  const MENU = [
+    ['#/ruang', 'ruang-aman', 'Ruang aman', 'nila'],
+    ['#/faskes', 'rs', 'Rumah sakit', 'merah'],
+    ['#/ambulans', 'ambulans', 'Ambulans', 'merah'],
+    ['#/kontak', 'sirene', 'Kontak darurat', 'merah'],
+    ['#/oksigen', 'oksigen', 'Oksigen', 'nila'],
+    ['#/air-bersih', 'tetes', 'Air bersih', 'nila'],
+    ['#/edukasi', 'buku', 'Edukasi', 'hijau'],
+    ['#/donasi', 'donasi', 'Donasi', 'jingga'],
+  ];
+
+  const PRIORITAS = { Mendesak: ['Mendesak', 'merah', 0], Tinggi: ['Prioritas tinggi', 'kuning', 1], Biasa: ['Biasa', 'abu', 2] };
 
   const NOMOR_NASIONAL = [
     { nomor: '112', nama: 'Layanan darurat terpadu', ket: 'Kebakaran, kecelakaan, kriminal, darurat medis' },
@@ -331,37 +372,81 @@
     return daftar.filter(function (e) { return e[kolom] === nilai; }).length;
   }
 
+  function angka(n) { return (Number(n) || 0).toLocaleString('id-ID'); }
+
+  function persen(e) {
+    const target = Number(e.target);
+    return target > 0 ? Math.max(0, Math.min(1, (Number(e.terkumpul) || 0) / target)) : 0;
+  }
+
+  function kebutuhanBarang() {
+    return ((data && data.donasi) || [])
+      .filter(function (e) { return e.jenis === 'Barang' && e.nama; })
+      .sort(function (a, b) {
+        const pa = (PRIORITAS[a.prioritas] || PRIORITAS.Biasa)[2];
+        const pb = (PRIORITAS[b.prioritas] || PRIORITAS.Biasa)[2];
+        return pa !== pb ? pa - pb : persen(a) - persen(b);
+      });
+  }
+
+  function htmlKemajuan(e) {
+    return '<div class="kemajuan" role="img" aria-label="' + esc(angka(e.terkumpul) + ' dari ' + angka(e.target) + ' ' + (e.satuan || '') + ' terkumpul') + '">' +
+      '<span class="kemajuan-isi" style="--isi:' + persen(e).toFixed(3) + '"></span></div>';
+  }
+
+  function htmlBarisPanduan(p) {
+    return '<li><a href="#/panduan/' + p.slug + '"><span class="panduan-ikon">' + ikon(p.ikon) + '</span>' +
+      '<span class="panduan-teks"><strong>' + esc(p.judul) + '</strong><span>' + esc(p.ringkas) + '</span></span>' +
+      ikon('kanan', 'kanan') + '</a></li>';
+  }
+
+  function htmlKepalaHalaman(kembali, judul, ket) {
+    return '<div class="halaman-kepala muncul"><a class="tombol-ikon" href="' + kembali + '" aria-label="Kembali">' + ikon('kiri') + '</a>' +
+      '<div><h1>' + esc(judul) + '</h1><p>' + esc(ket) + '</p></div></div>';
+  }
+
   function halamanBeranda() {
     const ruang = (data && data.ruang) || [];
-    const oksigen = (data && data.oksigen) || [];
-    const air = (data && data.air_bersih) || [];
-    const kontak = (data && data.kontak_darurat) || [];
-
     const buka = hitung(ruang, 'status', 'BUKA');
     const penuh = hitung(ruang, 'status', 'PENUH');
     const ringkasRuang = ruang.length
       ? (buka ? '<b>' + buka + ' buka sekarang</b>' : 'Belum ada yang buka') + (penuh ? ' · ' + penuh + ' penuh' : '') + ' · ' + ruang.length + ' tempat'
       : 'Relawan sedang mendata tempat';
 
-    const ubin = function (href, namaIkon, judul, ket, i) {
-      return '<a class="ubin muncul" style="--i:' + i + '" href="' + href + '">' + ikon(namaIkon) +
-        '<strong>' + judul + '</strong><span>' + ket + '</span></a>';
-    };
-    const ket = function (n, satuan) { return n ? n + ' ' + satuan : 'Belum ada data'; };
+    const menu = '<nav class="menu-layanan" aria-label="Layanan">' + MENU.map(function (m, i) {
+      const lencana = m[0] === '#/ruang' && buka
+        ? '<span class="menu-lencana" aria-hidden="true">' + buka + '</span>' : '';
+      return '<a class="menu-item nada-' + m[3] + '" style="--j:' + i + '" href="' + m[0] + '">' +
+        '<span class="menu-ikon">' + ikon(m[1]) + lencana + '</span><span class="menu-label">' + m[2] +
+        (lencana ? '<span class="sr">, ' + buka + ' buka</span>' : '') + '</span></a>';
+    }).join('') + '</nav>';
 
-    const bahaya = '<div class="bahaya muncul" style="--i:5"><p class="bahaya-judul">' + ikon('bahaya') +
+    const bahaya = '<div class="bahaya muncul" style="--i:3"><p class="bahaya-judul">' + ikon('bahaya') +
       'Segera ke IGD atau telepon 119 bila:</p><ul>' +
       window.TANDA_BAHAYA.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') +
       '</ul><a href="#/panduan/ispa">Lihat semua tanda bahaya</a></div>';
 
-    const panduan = window.PANDUAN.map(function (p) {
-      return '<li><a href="#/panduan/' + p.slug + '"><span class="panduan-ikon">' + ikon(p.ikon) + '</span>' +
-        '<span class="panduan-teks"><strong>' + esc(p.judul) + '</strong><span>' + esc(p.ringkas) + '</span></span>' +
-        ikon('kanan', 'kanan') + '</a></li>';
-    }).join('');
+    const unggulan = ['ispa', 'masker', 'ruang-bersih', 'kotak-udara-bersih'].map(function (slug) {
+      return window.PANDUAN.find(function (p) { return p.slug === slug; });
+    }).filter(Boolean);
+    const edukasi = '<ul class="daftar-panduan">' + unggulan.map(htmlBarisPanduan).join('') +
+      '<li><a class="lihat-semua" href="#/edukasi"><span>Lihat semua edukasi · ' + window.PANDUAN.length + ' materi</span>' +
+      ikon('kanan', 'kanan') + '</a></li></ul>';
+
+    const barang = kebutuhanBarang();
+    const donasi = '<a class="donasi-ajak" href="#/donasi">' +
+      '<span class="donasi-ajak-kepala"><span class="donasi-ajak-ikon">' + ikon('donasi') + '</span>' +
+      '<span class="donasi-ajak-teks"><strong>Donasi untuk warga terdampak asap</strong><span>' +
+      (barang.length ? 'Kebutuhan ruang aman dan posko kesehatan saat ini:'
+        : 'Pengurus IA-ITB Jambi sedang menyusun daftar kebutuhan dan saluran donasi resmi.') + '</span></span></span>' +
+      (barang.length ? '<span class="donasi-mini">' + barang.slice(0, 3).map(function (e) {
+        return '<span class="donasi-mini-baris"><span class="donasi-mini-teks"><span>' + esc(e.nama) + '</span><b>' +
+          Math.round(persen(e) * 100) + '%</b></span>' + htmlKemajuan(e) + '</span>';
+      }).join('') + '</span>' : '') +
+      '<span class="ubin-aksi">' + (barang.length ? 'Lihat kebutuhan dan cara donasi' : 'Buka halaman donasi') + ikon('kanan') + '</span></a>';
 
     const mitra = '<div class="mitra">' +
-      '<p>Program Siaga Asap menghubungkan warga dengan ruang aman, oksigen, air bersih, dan informasi kesehatan selama musim asap 2026.</p>' +
+      '<p>Program Siaga Asap menghubungkan warga dengan ruang aman, layanan kesehatan, oksigen, air bersih, dan informasi selama musim asap 2026.</p>' +
       '<div class="mitra-kelompok"><p class="mitra-label">Penyelenggara</p>' +
       '<div class="plat plat-utama"><img src="/logo/ia-itb-jambi.webp" alt="Ikatan Alumni ITB Jambi" width="110" height="72" loading="lazy"></div></div>' +
       '<div class="mitra-kelompok"><p class="mitra-label">Mitra</p><div class="mitra-baris">' +
@@ -370,28 +455,31 @@
       '</div></div></div>';
 
     return htmlLangit() +
-      '<section class="bagian" aria-labelledby="h-bantuan"><h2 class="judul-bagian muncul" style="--i:1" id="h-bantuan">Cari bantuan</h2>' +
-      '<a class="ubin-utama muncul" style="--i:1" href="#/ruang/terdekat"><span class="ubin-ikon">' + ikon('ruang-aman') + '</span>' +
+      '<section class="panel-layanan muncul" style="--i:1" aria-label="Layanan">' + menu + '</section>' +
+      '<section class="bagian bagian-rapat" aria-label="Ruang aman terdekat">' +
+      '<a class="ubin-utama muncul" style="--i:2" href="#/ruang/terdekat"><span class="ubin-ikon">' + ikon('ruang-aman') + '</span>' +
       '<strong>Ruang Aman Asap</strong><span class="ubin-ringkas">' + ringkasRuang + '</span>' +
-      '<span class="ubin-aksi">Cari yang terdekat dari saya' + ikon('kanan') + '</span></a>' +
-      '<div class="ubin-baris">' +
-      ubin('#/oksigen', 'oksigen', 'Oksigen', ket(oksigen.length, 'penyedia'), 2) +
-      ubin('#/air-bersih', 'tetes', 'Air bersih', ket(air.length, 'penyedia'), 3) +
-      ubin('#/kontak', 'sirene', 'Kontak darurat', (NOMOR_NASIONAL.length + kontak.length) + ' nomor penting', 4) +
-      '</div>' + bahaya + '</section>' +
-      '<section class="bagian muncul" style="--i:6" aria-labelledby="h-panduan"><h2 class="judul-bagian" id="h-panduan">Lindungi diri dan keluarga</h2>' +
-      '<ul class="daftar-panduan">' + panduan + '</ul></section>' +
-      '<section class="bagian muncul" style="--i:7" aria-labelledby="h-mitra"><h2 class="judul-bagian" id="h-mitra">Penyelenggara dan mitra</h2>' +
+      '<span class="ubin-aksi">Cari yang terdekat dari saya' + ikon('kanan') + '</span></a>' + bahaya + '</section>' +
+      '<section class="bagian muncul" style="--i:4" aria-labelledby="h-edukasi"><h2 class="judul-bagian" id="h-edukasi">Edukasi</h2>' +
+      edukasi + '</section>' +
+      '<section class="bagian muncul" style="--i:5" aria-labelledby="h-donasi"><h2 class="judul-bagian" id="h-donasi">Ikut membantu</h2>' +
+      donasi + '</section>' +
+      '<section class="bagian muncul" style="--i:6" aria-labelledby="h-mitra"><h2 class="judul-bagian" id="h-mitra">Penyelenggara dan mitra</h2>' +
       mitra + '</section>';
   }
 
   // ---------- direktori ----------
 
   function kartuEntri(cfg, e, i) {
+    let pita = '';
     const st = cfg.label && STATUS[e[cfg.label]];
+    if (st) {
+      pita = '<span class="status status-' + st[1] + '"><span class="status-titik" aria-hidden="true"></span>' + st[0] + '</span>';
+    } else if (/IGD 24 jam/.test(e.layanan || '')) {
+      pita = '<span class="status status-merah"><span class="status-titik" aria-hidden="true"></span>IGD 24 jam</span>';
+    }
     const adaJarak = typeof e._jarak === 'number';
-    const atas = st || adaJarak ? '<div class="entri-atas">' +
-      (st ? '<span class="status status-' + st[1] + '"><span class="status-titik" aria-hidden="true"></span>' + st[0] + '</span>' : '<span></span>') +
+    const atas = pita || adaJarak ? '<div class="entri-atas">' + (pita || '<span></span>') +
       (adaJarak ? '<span class="jarak">' + formatJarak(e._jarak) + '</span>' : '') + '</div>' : '';
     const sub = [e.jenis, [e.kecamatan, e.kabupaten].filter(Boolean).join(', ')].filter(Boolean).map(esc).join(' · ');
 
@@ -401,6 +489,7 @@
     if (e.jam_layanan) fakta.push(['jam', 'Layanan ' + esc(e.jam_layanan)]);
     if (e.kapasitas) fakta.push(['orang', 'Kapasitas ' + esc(e.kapasitas) + ' orang']);
     if (e.harga) fakta.push(['dompet', esc(e.harga)]);
+    if (e.biaya) fakta.push(['dompet', esc(e.biaya)]);
     if (e.wilayah_antar) fakta.push(['truk', 'Antar ke ' + esc(e.wilayah_antar)]);
     if (e.wilayah_layanan) fakta.push(['rute', 'Melayani ' + esc(e.wilayah_layanan)]);
     const htmlFakta = fakta.length ? '<ul class="fakta">' + fakta.map(function (f) {
@@ -434,7 +523,7 @@
         '" target="_blank" rel="noopener">' + ikon('arah') + 'Petunjuk arah</a>');
     }
     const tel = e.telepon || e.kontak_publik;
-    if (tel) aksi.push('<a class="tombol' + (cfg.tab === 'kontak_darurat' ? ' tombol-darurat-kecil' : '') + '" href="tel:' + esc(nomorTel(tel)) + '">' + ikon('telepon') + esc(tel) + '</a>');
+    if (tel) aksi.push('<a class="tombol' + (cfg.telDarurat ? ' tombol-darurat-kecil' : '') + '" href="tel:' + esc(nomorTel(tel)) + '">' + ikon('telepon') + esc(tel) + '</a>');
     const wa = nomorWa(e.kontak_publik);
     if (wa) aksi.push('<a class="tombol" href="https://wa.me/' + wa + '" target="_blank" rel="noopener">' + ikon('pesan') + 'WhatsApp</a>');
     const lapor = tautanLapor(cfg, e.id);
@@ -447,8 +536,9 @@
   }
 
   function ringkasDirektori(cfg, semua) {
-    if (cfg.tab === 'kontak_darurat') {
-      return NOMOR_NASIONAL.length + ' nomor darurat nasional' + (semua.length ? ' · ' + semua.length + ' faskes dan posko' : '');
+    if (cfg.nasional) {
+      return (cfg.nasional.length > 1 ? cfg.nasional.length + ' nomor darurat nasional' : 'Ambulans gawat darurat 119') +
+        (semua.length ? ' · ' + semua.length + ' ' + cfg.satuan : '');
     }
     if (!semua.length) return 'Belum ada data terverifikasi';
     let teks = semua.length + ' ' + cfg.satuan;
@@ -460,11 +550,16 @@
       const ada = semua.filter(function (e) { return e.stok === 'Tersedia' || e.stok === 'Terbatas'; }).length;
       if (ada) teks += ' · ' + ada + ' ada stok';
     }
+    if (cfg.utamakan) {
+      const igd = semua.filter(function (e) { return /IGD 24 jam/.test(e.layanan || ''); }).length;
+      if (igd) teks += ' · ' + igd + ' dengan IGD 24 jam';
+    }
     return teks;
   }
 
-  function htmlNasional() {
-    return '<div class="nasional">' + NOMOR_NASIONAL.map(function (n, i) {
+  function htmlNasional(nomor) {
+    const daftar = NOMOR_NASIONAL.filter(function (n) { return nomor.indexOf(n.nomor) !== -1; });
+    return '<div class="nasional' + (daftar.length === 1 ? ' nasional-sorot' : '') + '">' + daftar.map(function (n, i) {
       return '<a class="muncul" style="--i:' + i + '" href="tel:' + n.nomor + '"><span class="nasional-nomor">' + n.nomor + '</span>' +
         '<span><strong>' + esc(n.nama) + '</strong><span>' + esc(n.ket) + '</span></span>' + ikon('telepon') + '</a>';
     }).join('') + '</div>';
@@ -473,6 +568,7 @@
   function halamanDirektori(kunci) {
     const cfg = DIREKTORI[kunci];
     let semua = (data && data[cfg.tab]) || [];
+    if (cfg.saring) semua = semua.filter(cfg.saring);
     if (cfg.tab === 'kontak_darurat') {
       const nasional = NOMOR_NASIONAL.map(function (n) { return n.nomor; });
       semua = semua.filter(function (e) { return nasional.indexOf(nomorTel(e.telepon)) === -1; });
@@ -498,6 +594,7 @@
       const ja = typeof a._jarak === 'number' ? a._jarak : Infinity;
       const jb = typeof b._jarak === 'number' ? b._jarak : Infinity;
       if (ja !== jb) return ja - jb;
+      if (cfg.utamakan && cfg.utamakan(a) !== cfg.utamakan(b)) return cfg.utamakan(a) - cfg.utamakan(b);
       return String(a.nama).localeCompare(String(b.nama), 'id');
     });
 
@@ -525,22 +622,95 @@
         '<p>' + (semua.length ? 'Coba pilih kabupaten atau kecamatan lain.' : esc(kosong.teks)) + '</p>' +
         (semua.length ? '' : tautanKosong) + '</div>';
 
-    return '<div class="halaman-kepala muncul"><a class="tombol-ikon" href="#/" aria-label="Kembali ke beranda">' + ikon('kiri') + '</a>' +
-      '<div><h1>' + esc(cfg.judul) + '</h1><p>' + esc(ringkasDirektori(cfg, semua)) + '</p></div></div>' +
-      (cfg.tab === 'kontak_darurat' ? htmlNasional() + (semua.length ? '<h2 class="judul-bagian">Faskes dan posko</h2>' : '') : '') +
+    const judulLain = kunci === 'ambulans' ? 'Ambulans setempat' : 'Kontak lain';
+    return htmlKepalaHalaman('#/', cfg.judul, ringkasDirektori(cfg, semua)) +
+      (cfg.nasional ? htmlNasional(cfg.nasional) + (semua.length ? '<h2 class="judul-bagian">' + judulLain + '</h2>' : '') : '') +
       alat + daftar;
   }
 
-  // ---------- panduan ----------
+  // ---------- edukasi dan panduan ----------
+
+  function halamanEdukasi() {
+    const kelompok = [];
+    window.PANDUAN.forEach(function (p) {
+      let k = kelompok.find(function (x) { return x.nama === p.kelompok; });
+      if (!k) {
+        k = { nama: p.kelompok, isi: [] };
+        kelompok.push(k);
+      }
+      k.isi.push(p);
+    });
+    return htmlKepalaHalaman('#/', 'Edukasi', window.PANDUAN.length + ' materi tentang asap, kesehatan, dan pencegahan kebakaran') +
+      kelompok.map(function (k, i) {
+        return '<section class="bagian bagian-edukasi muncul" style="--i:' + (i + 1) + '"><h2 class="judul-bagian">' + esc(k.nama) + '</h2>' +
+          '<ul class="daftar-panduan">' + k.isi.map(htmlBarisPanduan).join('') + '</ul></section>';
+      }).join('');
+  }
 
   function halamanPanduan(slug) {
-    const p = window.PANDUAN.find(function (x) { return x.slug === slug; });
+    const daftar = window.PANDUAN;
+    const p = daftar.find(function (x) { return x.slug === slug; });
     if (!p) return halamanTidakAda();
-    return '<div class="halaman-kepala muncul"><a class="tombol-ikon" href="#/" aria-label="Kembali ke beranda">' + ikon('kiri') + '</a>' +
-      '<div><h1>' + esc(p.judul) + '</h1><p>' + esc(p.ringkas) + '</p></div></div>' +
+    const lanjut = daftar[(daftar.indexOf(p) + 1) % daftar.length];
+    return htmlKepalaHalaman('#/edukasi', p.judul, p.ringkas) +
       '<article class="artikel muncul" style="--i:1">' + p.html + '</article>' +
       '<div class="artikel-kaki muncul" style="--i:2"><button type="button" class="tombol" data-bagikan="' + esc(p.judul) + '">' +
-      ikon('bagikan') + 'Bagikan panduan ini</button></div>';
+      ikon('bagikan') + 'Bagikan panduan ini</button></div>' +
+      '<section class="bagian muncul" style="--i:3" aria-labelledby="h-lanjut"><h2 class="judul-bagian" id="h-lanjut">Baca berikutnya</h2>' +
+      '<ul class="daftar-panduan">' + htmlBarisPanduan(lanjut) + '</ul></section>';
+  }
+
+  // ---------- donasi ----------
+
+  function halamanDonasi() {
+    const barang = kebutuhanBarang();
+    const rekening = ((data && data.donasi) || []).filter(function (e) { return e.jenis === 'Rekening' && e.nama && e.detail; });
+
+    const kartuBarang = function (e, i) {
+      const pr = PRIORITAS[e.prioritas];
+      const wa = nomorWa(e.kontak_publik);
+      const pesan = encodeURIComponent('Halo, saya ingin menyumbang ' + e.nama + ' untuk Program Siaga Asap Jambi.');
+      return '<article class="entri muncul" style="--i:' + Math.min(i + 2, 8) + '">' +
+        (pr ? '<div class="entri-atas"><span class="status status-' + pr[1] + '">' +
+          (pr[2] === 0 ? '<span class="status-titik" aria-hidden="true"></span>' : '') + pr[0] + '</span></div>' : '') +
+        '<h3>' + esc(e.nama) + '</h3>' + (e.detail ? '<p class="entri-sub">' + esc(e.detail) + '</p>' : '') +
+        (Number(e.target) > 0 ? '<div class="kemajuan-blok"><div class="kemajuan-teks"><span><b>' + angka(e.terkumpul) + '</b> dari ' +
+          angka(e.target) + ' ' + esc(e.satuan || '') + '</span><b>' + Math.round(persen(e) * 100) + '%</b></div>' + htmlKemajuan(e) + '</div>' : '') +
+        (e.lokasi_antar ? '<ul class="fakta"><li>' + ikon('pin') + '<span>Antar ke ' + esc(e.lokasi_antar) + '</span></li></ul>' : '') +
+        (e.diubah_pada ? '<p class="segar">' + ikon('centang') + 'Diperbarui ' + esc(relatif(e.diubah_pada)) + '</p>' : '') +
+        (wa ? '<div class="aksi"><a class="tombol" href="https://wa.me/' + wa + '?text=' + pesan + '" target="_blank" rel="noopener">' +
+          ikon('pesan') + 'Hubungi koordinator</a></div>' : '') +
+        '</article>';
+    };
+
+    const kartuRekening = function (e, i) {
+      const wa = nomorWa(e.kontak_publik);
+      const pesan = encodeURIComponent('Halo, saya sudah berdonasi untuk Program Siaga Asap Jambi lewat ' + e.nama + '.');
+      return '<article class="entri rekening muncul" style="--i:' + Math.min(i + 2, 8) + '">' +
+        '<div class="rekening-kepala"><span class="rekening-ikon">' + ikon('bank') + '</span>' +
+        '<span><strong>' + esc(e.nama) + '</strong>' + (e.atas_nama ? '<span>a.n. ' + esc(e.atas_nama) + '</span>' : '') + '</span></div>' +
+        '<div class="rekening-nomor"><span class="nomor">' + esc(e.detail) + '</span>' +
+        '<button type="button" class="tombol" data-salin="' + esc(String(e.detail).replace(/\s/g, '')) + '">' + ikon('salin') + 'Salin</button></div>' +
+        (wa ? '<div class="aksi"><a class="tombol" href="https://wa.me/' + wa + '?text=' + pesan + '" target="_blank" rel="noopener">' +
+          ikon('pesan') + 'Konfirmasi donasi</a></div>' : '') +
+        '</article>';
+    };
+
+    const kosong = function (ikonNama, judul, teks) {
+      return '<div class="kosong muncul"><span class="kosong-ikon">' + ikon(ikonNama) + '</span><h2>' + judul + '</h2><p>' + teks + '</p></div>';
+    };
+
+    return htmlKepalaHalaman('#/', 'Donasi', 'Bantu ruang aman dan posko kesehatan di Provinsi Jambi') +
+      '<div class="waspada muncul" style="--i:1">' + ikon('waspada') +
+      '<p><strong>Donasi hanya lewat saluran resmi di halaman ini.</strong> Pengurus IA-ITB Jambi tidak pernah meminta transfer ke rekening pribadi lewat chat atau telepon.</p></div>' +
+      '<section class="bagian" aria-labelledby="h-barang"><h2 class="judul-bagian" id="h-barang">Kebutuhan barang</h2>' +
+      (barang.length ? '<div class="daftar">' + barang.map(kartuBarang).join('') + '</div>'
+        : kosong('paket', 'Daftar kebutuhan sedang disusun', 'Pengurus dan relawan sedang mendata kebutuhan ruang aman dan posko kesehatan.')) +
+      '</section>' +
+      '<section class="bagian" aria-labelledby="h-uang"><h2 class="judul-bagian" id="h-uang">Donasi uang</h2>' +
+      (rekening.length ? '<div class="daftar">' + rekening.map(kartuRekening).join('') + '</div>'
+        : kosong('bank', 'Saluran donasi uang belum dibuka', 'Rekening resmi akan diumumkan pengurus IA-ITB Jambi di halaman ini. Jangan transfer ke rekening yang dikirim lewat pesan berantai.')) +
+      '</section>';
   }
 
   function halamanTidakAda() {
@@ -604,6 +774,8 @@
     let html;
     if (!data) html = '<div class="kosong"><h2>Data belum bisa dimuat</h2><p>Periksa koneksi internet, lalu muat ulang halaman.</p></div>';
     else if (!rute) html = halamanBeranda();
+    else if (halaman === 'edukasi') html = halamanEdukasi();
+    else if (halaman === 'donasi') html = halamanDonasi();
     else if (DIREKTORI[halaman]) html = halamanDirektori(halaman);
     else if (halaman === 'panduan') html = halamanPanduan(bagian[1]);
     else html = halamanTidakAda();
@@ -669,6 +841,15 @@
     }
   }
 
+  async function salinTeks(teks) {
+    try {
+      await navigator.clipboard.writeText(teks);
+      toast('Nomor rekening disalin.');
+    } catch (e) {
+      toast('Nomor rekening: ' + teks);
+    }
+  }
+
   // ---------- peristiwa ----------
 
   isi.addEventListener('click', function (ev) {
@@ -676,7 +857,9 @@
     if (lokasi) { gantiLokasi(lokasi.dataset.lokasi); return; }
     if (ev.target.closest('#tombol-terdekat')) { cariPosisi(); return; }
     const bagi = ev.target.closest('[data-bagikan]');
-    if (bagi) bagikan(bagi.dataset.bagikan);
+    if (bagi) { bagikan(bagi.dataset.bagikan); return; }
+    const salin = ev.target.closest('[data-salin]');
+    if (salin) salinTeks(salin.dataset.salin);
   });
 
   isi.addEventListener('change', function (ev) {
