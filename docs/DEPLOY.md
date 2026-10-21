@@ -9,9 +9,11 @@ Relawan → Google Form → Google Sheet → Apps Script (/exec, ber-token)
             Warga → lawanasap.iaitbjambi.org  (satu Worker: web + /api)
 ```
 
-Alamat resmi adalah custom domain `lawanasap.iaitbjambi.org` (variabel `DOMAIN_UTAMA` di
-`worker/wrangler.toml`). Halaman di alamat `*.workers.dev` dialihkan permanen (301) ke sana, dengan
-path, query, dan bagian `#` tetap; `/api/*` tetap dilayani di kedua alamat.
+Alamat resmi `lawanasap.iaitbjambi.org` disambungkan dari zona iaitbjambi.org di akun Cloudflare
+lain, sehingga Worker menerima host workers.dev untuk kedua alamat dan tidak bisa membedakannya.
+Karena itu pengalihan dilakukan oleh skrip kecil di awal `web/index.html`: browser yang membuka
+`*.workers.dev` langsung pindah ke domain resmi dengan path, query, dan bagian `#` tetap.
+`/api/*` tetap dilayani di kedua alamat.
 
 ---
 

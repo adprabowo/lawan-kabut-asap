@@ -6,9 +6,6 @@
  * POST /api/status   (Bearer BOT_TOKEN)  {kode, status, dari} dari pengelola ruang
  * POST /api/segarkan (Bearer BOT_TOKEN)  tarik ulang data sekarang, termasuk PM2.5 BMKG
  * cron tiap 5 menit                      tarik data dari Apps Script; PM2.5 BMKG tiap 15 menit
- *
- * Halaman web di alamat *.workers.dev dialihkan permanen ke DOMAIN_UTAMA; /api/* tetap dilayani
- * di kedua alamat supaya bot dan web yang masih terbuka tidak putus.
  */
 import { bacaData, kirimStatus, segarkan } from './data.js';
 import { dataContoh } from './data-contoh.js';
@@ -105,13 +102,6 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
-
-    if (!url.pathname.startsWith('/api/')) {
-      if (env.DOMAIN_UTAMA && url.hostname.endsWith('.workers.dev')) {
-        return Response.redirect(`https://${env.DOMAIN_UTAMA}${url.pathname}${url.search}`, 301);
-      }
-      return env.ASSETS.fetch(request);
-    }
 
     const rute = `${request.method} ${url.pathname}`;
     switch (rute) {

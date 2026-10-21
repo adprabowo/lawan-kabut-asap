@@ -2,14 +2,14 @@ name = "lawan-kabut-asap"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
-# Web statis (folder web/) dan API dilayani satu Worker di https://lawanasap.iaitbjambi.org
-# (custom domain) dan lawan-kabut-asap.<subdomain-akun>.workers.dev.
-# Kode Worker hanya jalan untuk /api/* dan halaman utama (untuk pengalihan dari workers.dev);
-# file web lain dilayani langsung tanpa memakai kuota request Worker.
+# Web statis (folder web/) dan API dilayani satu Worker: lawan-kabut-asap.<subdomain-akun>.workers.dev.
+# Alamat resmi https://lawanasap.iaitbjambi.org disambungkan dari zona iaitbjambi.org (akun Cloudflare lain),
+# jadi Worker melihat host workers.dev untuk kedua alamat; pengalihan dilakukan di web/index.html.
+# Hanya /api/* yang menjalankan kode Worker; file web dilayani langsung tanpa memakai kuota request Worker.
 [assets]
 directory = "../web"
 binding = "ASSETS"
-run_worker_first = ["/api/*", "/", "/index.html"]
+run_worker_first = ["/api/*"]
 
 # Tarik data dari Apps Script tiap 5 menit.
 [triggers]
@@ -23,8 +23,6 @@ id = "39c064279718492f96c92af6096beb36"
 [vars]
 # "1" = /api/data memakai data contoh selama KV masih kosong (untuk demo). Set "0" sebelum peluncuran.
 MODE_CONTOH = "1"
-# Alamat resmi web. Halaman di *.workers.dev dialihkan (301) ke sini; /api/* tetap dilayani di keduanya.
-DOMAIN_UTAMA = "lawanasap.iaitbjambi.org"
 
 # Rahasia, isi dengan `npx wrangler secret put <NAMA>` (jangan ditulis di sini):
 #   APPS_SCRIPT_URL    URL web app Apps Script (berakhiran /exec)

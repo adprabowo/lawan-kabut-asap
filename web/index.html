@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script>
+    // Alamat lama workers.dev pindah ke domain resmi; path, query, dan # tetap.
+    if (/\.workers\.dev$/.test(location.hostname)) location.replace('https://lawanasap.iaitbjambi.org' + location.pathname + location.search + location.hash);
+  </script>
   <title>Lawan Kabut Asap Jambi</title>
   <meta name="description" content="Kualitas udara, ruang aman asap, oksigen, air bersih, kontak darurat, dan panduan kesehatan saat kabut asap di Provinsi Jambi.">
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
