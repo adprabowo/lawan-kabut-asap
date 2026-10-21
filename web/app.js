@@ -548,7 +548,8 @@
     const segar = e.terverifikasi_pada
       ? '<p class="segar' + (basi ? ' basi' : '') + '">' + ikon(basi ? 'bahaya' : 'centang') +
         (basi ? 'Perlu dicek ulang · terakhir dicek ' : 'Dicek relawan ') + esc(relatif(e.terverifikasi_pada)) + '</p>'
-      : '';
+      // Entri impor dari direktori publik (Kemenkes, OpenStreetMap) tampil tanpa waktu verifikasi.
+      : '<p class="segar belum">' + ikon('info') + 'Belum dicek relawan · dari direktori publik</p>';
 
     const aksi = [];
     if (typeof e.lat === 'number' && typeof e.lng === 'number') {

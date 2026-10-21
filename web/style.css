@@ -885,6 +885,7 @@ main { display: block; padding-block: 16px 8px; }
 .segar { display: flex; align-items: center; gap: 6px; margin: 12px 0 0; color: var(--hijau); font-size: 13px; font-weight: 600; }
 .segar .ikon { width: 16px; height: 16px; }
 .segar.basi { color: var(--kuning); }
+.segar.belum { color: var(--redup); font-weight: 500; }
 
 .aksi { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 
