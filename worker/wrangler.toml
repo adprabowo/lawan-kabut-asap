@@ -16,7 +16,7 @@ crons = ["*/5 * * * *"]
 # Buat dengan: npx wrangler kv namespace create DATA, lalu isi id di bawah.
 [[kv_namespaces]]
 binding = "DATA"
-id = "ISI_SETELAH_MEMBUAT_NAMESPACE"
+id = "39c064279718492f96c92af6096beb36"
 
 [vars]
 # "1" = /api/data memakai data contoh selama KV masih kosong (untuk demo). Set "0" sebelum peluncuran.
