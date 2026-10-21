@@ -41,6 +41,12 @@ function uraiKoordinat(teks) {
   return null;
 }
 
+/** Tautan pendek Google Maps (dari tombol "Bagikan") di dalam teks, atau '' bila tidak ada. */
+function ambilTautanPendek(teks) {
+  const m = /https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps)\/[A-Za-z0-9_-]+/.exec(String(teks || ''));
+  return m ? m[0] : '';
+}
+
 /** Kategori ISPU menurut Permen LHK P.14/2020. */
 function kategoriIspu(ispu) {
   const n = Number(ispu);

@@ -183,7 +183,13 @@ function lengkapiForm_(tab) {
 
   const urutan = PERTANYAAN_FORM[tab];
   urutan.forEach(function (k, i) {
-    if (itemUntuk(k)) return;
+    const ada = itemUntuk(k);
+    if (ada) {
+      // Pilihan jawaban mengikuti SKEMA terbaru, misalnya jenis tempat yang baru ditambahkan.
+      if (s.pilihan[k]) ada.asListItem().setChoiceValues(s.pilihan[k]);
+      else if (s.pilihanGanda && s.pilihanGanda[k]) ada.asCheckboxItem().setChoiceValues(s.pilihanGanda[k]);
+      return;
+    }
     const item = tambahPertanyaan_(form, s, k);
     peta.item[item.getId()] = k;
     const sebelum = i > 0 ? itemUntuk(urutan[i - 1]) : null;

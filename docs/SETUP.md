@@ -39,6 +39,8 @@ Atau lewat clasp: `npm i -g @google/clasp`, `clasp login`, `clasp create --type 
 ## 3. Alur kerja relawan
 
 1. Relawan pengumpul data mengisi **Form input**. Entri masuk dengan `tampil` belum dicentang.
+   Untuk titik lokasi, tempel tautan dari tombol **Bagikan** di Google Maps (`maps.app.goo.gl/...`)
+   atau koordinat; keduanya otomatis diubah menjadi `lat` dan `lng`.
 2. Relawan verifikasi menelepon/mengecek tempat, lalu mencentang `tampil`.
    `terverifikasi_pada` dan `cek_ulang_sebelum` terisi otomatis
    (ruang dan oksigen 1 hari, air bersih 3 hari, kontak darurat 14 hari).
@@ -89,6 +91,8 @@ masukkan rekening atas nama organisasi, bukan rekening pribadi.
 Setiap kali kode di folder `apps-script/` berubah:
 
 1. Salin ulang semua file `.gs` dan `appsscript.json` ke editor Apps Script.
-2. Jalankan `siapkan()`. Fungsi ini menambah kolom dan tab baru, menambah pertanyaan baru ke Form
-   yang sudah ada, dan tidak mengubah data atau centang `tampil` yang sudah ada.
+2. Jalankan `siapkan()`. Fungsi ini menambah kolom dan tab baru, menambah pertanyaan dan pilihan
+   jawaban baru ke Form yang sudah ada, dan tidak mengubah data atau centang `tampil` yang sudah ada.
+   Bila Google meminta izin baru (misalnya "terhubung ke layanan eksternal" untuk membuka tautan
+   pendek Google Maps), setujui seperti saat pertama.
 3. **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**. URL `/exec` tetap sama.

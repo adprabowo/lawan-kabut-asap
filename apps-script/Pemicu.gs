@@ -32,7 +32,7 @@ function tambahEntri_(tab, jawaban) {
   const sekarang = new Date();
 
   if (jawaban.lokasi) {
-    const titik = uraiKoordinat(jawaban.lokasi);
+    const titik = uraiKoordinat(jawaban.lokasi) || uraiKoordinat(bukaTautanPendek_(jawaban.lokasi));
     if (titik) {
       jawaban.lat = titik.lat;
       jawaban.lng = titik.lng;
@@ -52,6 +52,27 @@ function tambahEntri_(tab, jawaban) {
 
   sh.appendRow(header.map(function (k) { return jawaban[k] === undefined ? '' : jawaban[k]; }));
   tulisLog_(tab, id, '(baru)', '', jawaban.nama || '', 'Google Form');
+}
+
+/**
+ * Tautan pendek maps.app.goo.gl tidak memuat koordinat; koordinatnya ada di alamat tujuan
+ * pengalihannya. Mengembalikan URL tujuan, atau '' bila tidak ada tautan pendek atau gagal dibuka.
+ */
+function bukaTautanPendek_(teks) {
+  let url = ambilTautanPendek(teks);
+  if (!url) return '';
+  try {
+    for (let i = 0; i < 3 && !uraiKoordinat(url); i++) {
+      const res = UrlFetchApp.fetch(url, { followRedirects: false, muteHttpExceptions: true });
+      const header = res.getHeaders();
+      const tujuan = header.Location || header.location;
+      if (!tujuan) break;
+      url = tujuan;
+    }
+    return url;
+  } catch (err) {
+    return '';
+  }
 }
 
 function terimaLaporan_(jawaban) {

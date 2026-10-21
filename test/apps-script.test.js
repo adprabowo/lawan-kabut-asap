@@ -95,6 +95,20 @@ test('uraiKoordinat', () => {
   assert.equal(ctx.uraiKoordinat('200, 300'), null);
 });
 
+test('uraiKoordinat memilih titik penanda tempat, bukan titik tengah peta', () => {
+  // Tujuan pengalihan dari https://maps.app.goo.gl/tuqcw3VXwXDG9x3X9 (Yayasan Pesona Kebaikan Indonesia).
+  const url = 'https://www.google.com/maps/place/Yayasan+Pesona+Kebaikan+Indonesia/@-1.6275502,103.5851537,842m/' +
+    'data=!3m2!1e3!4b1!4m6!3m5!1s0x2e25897db9eb947b:0x4a9e81b18497b792!8m2!3d-1.6275502!4d103.5877286!16s%2Fg%2F11sjx80fc6';
+  assert.deepEqual(JSON.parse(JSON.stringify(ctx.uraiKoordinat(url))), { lat: -1.6275502, lng: 103.5877286 });
+});
+
+test('ambilTautanPendek', () => {
+  assert.equal(ctx.ambilTautanPendek('lihat https://maps.app.goo.gl/tuqcw3VXwXDG9x3X9 ya'), 'https://maps.app.goo.gl/tuqcw3VXwXDG9x3X9');
+  assert.equal(ctx.ambilTautanPendek('https://goo.gl/maps/AbC123'), 'https://goo.gl/maps/AbC123');
+  assert.equal(ctx.ambilTautanPendek('-1.61, 103.61'), '');
+  assert.equal(ctx.ambilTautanPendek(null), '');
+});
+
 test('kategoriIspu', () => {
   assert.equal(ctx.kategoriIspu(50), 'Baik');
   assert.equal(ctx.kategoriIspu(101), 'Tidak Sehat');

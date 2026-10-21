@@ -41,7 +41,7 @@ const SKEMA = {
       'layanan', 'jam_buka', 'kapasitas', 'status', 'pm25_dalam', 'pengelola_wa'],
     pilihan: {
       jenis: ['Posko Utama', 'Sekolah', 'Masjid/Mushala', 'Rumah ibadah lain', 'Posyandu',
-        'Balai warga', 'Kantor', 'Lainnya'],
+        'Balai warga', 'Kantor', 'Yayasan/komunitas', 'Lainnya'],
       status: ['BUKA', 'PENUH', 'TUTUP'],
       kabupaten: KABUPATEN,
     },
