@@ -1,0 +1,8 @@
+{
+  "name": "siaga-asap-jambi",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}
