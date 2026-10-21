@@ -409,8 +409,11 @@
     const ruang = (data && data.ruang) || [];
     const buka = hitung(ruang, 'status', 'BUKA');
     const penuh = hitung(ruang, 'status', 'PENUH');
+    // "Belum ada yang buka" hanya bila status semua tempat diketahui; status kosong belum dikonfirmasi.
+    const statusLengkap = ruang.every(function (e) { return STATUS[e.status]; });
     const ringkasRuang = ruang.length
-      ? (buka ? '<b>' + buka + ' buka sekarang</b>' : 'Belum ada yang buka') + (penuh ? ' · ' + penuh + ' penuh' : '') + ' · ' + ruang.length + ' tempat'
+      ? [buka ? '<b>' + buka + ' buka sekarang</b>' : statusLengkap ? 'Belum ada yang buka' : '',
+        penuh ? penuh + ' penuh' : '', ruang.length + ' tempat'].filter(Boolean).join(' · ')
       : 'Relawan sedang mendata tempat';
 
     const menu = '<nav class="menu-layanan" aria-label="Layanan">' + MENU.map(function (m, i) {
@@ -477,6 +480,9 @@
       pita = '<span class="status status-' + st[1] + '"><span class="status-titik" aria-hidden="true"></span>' + st[0] + '</span>';
     } else if (/IGD 24 jam/.test(e.layanan || '')) {
       pita = '<span class="status status-merah"><span class="status-titik" aria-hidden="true"></span>IGD 24 jam</span>';
+    } else if (cfg.label) {
+      // Status kosong jangan sampai terbaca buka: warga perlu memastikan dulu sebelum datang.
+      pita = '<span class="status status-abu">' + (cfg.label === 'stok' ? 'Stok' : 'Status') + ' belum dikonfirmasi</span>';
     }
     const adaJarak = typeof e._jarak === 'number';
     const atas = pita || adaJarak ? '<div class="entri-atas">' + (pita || '<span></span>') +
@@ -588,8 +594,9 @@
       if (posisi && cfg.terdekat && typeof e.lat === 'number' && typeof e.lng === 'number') salin._jarak = jarakKm(posisi, e);
       return salin;
     }).sort(function (a, b) {
-      const sa = URUTAN_STATUS[a[cfg.label]] || 0;
-      const sb = URUTAN_STATUS[b[cfg.label]] || 0;
+      // Status kosong (belum dikonfirmasi) diurutkan setelah yang penuh, sebelum yang tutup.
+      const sa = a[cfg.label] in URUTAN_STATUS ? URUTAN_STATUS[a[cfg.label]] : 1.5;
+      const sb = b[cfg.label] in URUTAN_STATUS ? URUTAN_STATUS[b[cfg.label]] : 1.5;
       if (sa !== sb) return sa - sb;
       const ja = typeof a._jarak === 'number' ? a._jarak : Infinity;
       const jb = typeof b._jarak === 'number' ? b._jarak : Infinity;
