@@ -11,7 +11,7 @@ async function sha256(teks) {
 
 async function ambilBmkg(kini) {
   const res = await fetch(URL_BMKG, {
-    headers: { 'User-Agent': 'LawanKabutAsap/1.0 (+https://lawan-kabut-asap.adprabowo-id.workers.dev)' },
+    headers: { 'User-Agent': 'LawanKabutAsap/1.0 (+https://lawanasap.iaitbjambi.org)' },
     signal: AbortSignal.timeout(20000),
   });
   if (!res.ok) throw new Error(`BMKG HTTP ${res.status}`);

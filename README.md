@@ -8,7 +8,7 @@ Asap IA-ITB Jambi 2026. Dibangun di paket gratis Google dan Cloudflare.
 Relawan ─ Google Form ─ Google Sheet (privat) ─ Apps Script doGet (kolom publik, ber-token)
                                                              │ cron 5 menit → 1 key KV
                                   PM2.5 BMKG (tiap 15 menit) ─┘
-              Warga ─ lawan-kabut-asap.<subdomain>.workers.dev (satu Worker: web/ + /api/*)
+              Warga ─ lawanasap.iaitbjambi.org (satu Worker: web/ + /api/*)
               Bot WhatsApp ─ /api/data, /api/status
 ```
 

@@ -244,3 +244,16 @@ test('BMKG hanya dibaca tiap 15 menit; pembacaan terakhir dipakai saat BMKG gaga
 test('rute tidak dikenal 404', async () => {
   assert.equal((await worker.fetch(req('/api/webhook'), env, ctx)).status, 404);
 });
+
+test('halaman di workers.dev dialihkan ke domain utama, API tetap dilayani', async () => {
+  const e = { ...env, DOMAIN_UTAMA: 'lawanasap.iaitbjambi.org', ASSETS: { fetch: async () => new Response('web') } };
+  const lama = (p) => new Request(`https://lawan-kabut-asap.contoh.workers.dev${p}`);
+  let res = await worker.fetch(lama('/?demo=1'), e, ctx);
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get('Location'), 'https://lawanasap.iaitbjambi.org/?demo=1');
+  res = await worker.fetch(lama('/index.html'), e, ctx);
+  assert.equal(res.headers.get('Location'), 'https://lawanasap.iaitbjambi.org/index.html');
+  assert.equal((await worker.fetch(lama('/api/data'), e, ctx)).headers.get('Content-Type'), 'application/json; charset=utf-8');
+  res = await worker.fetch(new Request('https://lawanasap.iaitbjambi.org/'), e, ctx);
+  assert.equal(await res.text(), 'web');
+});

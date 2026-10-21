@@ -6,8 +6,12 @@ disambungkan ke data asli dari Google Sheet (Bagian B). Bagian A cukup sekitar 1
 ```
 Relawan → Google Form → Google Sheet → Apps Script (/exec, ber-token)
                                               ↑ tiap 5 menit
-            Warga → lawan-kabut-asap.<subdomain>.workers.dev  (satu Worker: web + /api)
+            Warga → lawanasap.iaitbjambi.org  (satu Worker: web + /api)
 ```
+
+Alamat resmi adalah custom domain `lawanasap.iaitbjambi.org` (variabel `DOMAIN_UTAMA` di
+`worker/wrangler.toml`). Halaman di alamat `*.workers.dev` dialihkan permanen (301) ke sana, dengan
+path, query, dan bagian `#` tetap; `/api/*` tetap dilayani di kedua alamat.
 
 ---
 
