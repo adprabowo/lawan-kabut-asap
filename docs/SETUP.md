@@ -91,6 +91,8 @@ masukkan rekening atas nama organisasi, bukan rekening pribadi.
 Setelah penyiapan sekali di [DEPLOY.md bagian C](DEPLOY.md#bagian-c-deploy-apps-script-otomatis),
 `scripts/deploy.sh` mengirim kode Apps Script, memperbarui versi web app (URL `/exec` tetap sama),
 dan Sheet serta Form menyesuaikan diri dengan skema baru dalam 5 menit. Tidak ada langkah manual.
+Kolom baru disisipkan tepat setelah kolom skema sebelumnya, jadi tidak jatuh di belakang kolom
+verifikasi dan privat; kolom yang sudah ada tidak dipindah.
 
 Cara manual (bila clasp belum disiapkan): salin semua file `apps-script/` ke editor, jalankan
 `siapkan()`, lalu **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**.

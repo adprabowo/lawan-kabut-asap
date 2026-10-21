@@ -130,6 +130,17 @@ test('indeksBarisKosong: lompati baris berisi, abaikan kotak centang FALSE di ba
   assert.equal(ctx.indeksBarisKosong([], []), 0);
 });
 
+test('rencanaKolomBaru: kolom baru disisipkan setelah kolom skema sebelumnya, bukan di ujung', () => {
+  // Tab kontak_darurat sebelum Okt 2026, ditambah satu kolom buatan relawan di ujung.
+  const lama = ['id', 'nama', 'jenis', 'kabupaten', 'alamat', 'telepon', 'jam_layanan',
+    ...ctx.KOLOM_VERIFIKASI, 'catatan_relawan'];
+  const header = [...ctx.headerTab('kontak_darurat')];
+  const hasil = lama.slice();
+  for (const r of ctx.rencanaKolomBaru(lama, header)) hasil.splice(r.posisi - 1, 0, r.kolom);
+  assert.deepEqual(hasil, [...header, 'catatan_relawan']);
+  assert.equal(ctx.rencanaKolomBaru(hasil, header).length, 0);
+});
+
 test('ambilTautanPendek', () => {
   assert.equal(ctx.ambilTautanPendek('lihat https://maps.app.goo.gl/tuqcw3VXwXDG9x3X9 ya'), 'https://maps.app.goo.gl/tuqcw3VXwXDG9x3X9');
   assert.equal(ctx.ambilTautanPendek('https://goo.gl/maps/AbC123'), 'https://goo.gl/maps/AbC123');

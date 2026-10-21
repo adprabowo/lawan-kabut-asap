@@ -52,6 +52,23 @@ function indeksBarisKosong(ids, nama) {
   return ids.length;
 }
 
+/**
+ * Kolom skema yang belum ada di Sheet beserta posisi sisipnya (1-based, diterapkan berurutan):
+ * tepat setelah kolom skema sebelumnya, sehingga kolom baru tidak jatuh di belakang kolom
+ * verifikasi dan privat. Kolom tambahan buatan relawan tetap di tempatnya.
+ */
+function rencanaKolomBaru(ada, header) {
+  const susunan = ada.slice();
+  const rencana = [];
+  header.forEach(function (k, i) {
+    if (susunan.indexOf(k) !== -1) return;
+    const posisi = i === 0 ? 1 : susunan.indexOf(header[i - 1]) + 2;
+    susunan.splice(posisi - 1, 0, k);
+    rencana.push({ kolom: k, posisi: posisi });
+  });
+  return rencana;
+}
+
 /** Tautan pendek Google Maps (dari tombol "Bagikan") di dalam teks, atau '' bila tidak ada. */
 function ambilTautanPendek(teks) {
   const m = /https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps)\/[A-Za-z0-9_-]+/.exec(String(teks || ''));

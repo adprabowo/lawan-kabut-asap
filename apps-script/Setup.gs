@@ -110,14 +110,20 @@ function siapkanTab_(ss, tab) {
   if (!sh) sh = ss.insertSheet(tab);
 
   const ada = sh.getLastColumn() > 0
-    ? sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].filter(String)
+    ? sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String)
     : [];
-  if (ada.length === 0) {
+  if (ada.filter(String).length === 0) {
     sh.getRange(1, 1, 1, header.length).setValues([header]);
   } else {
-    // Tambahkan kolom yang belum ada di ujung kanan; kolom lama tidak dipindah.
-    const kurang = header.filter(function (k) { return ada.indexOf(k) === -1; });
-    if (kurang.length) sh.getRange(1, ada.length + 1, 1, kurang.length).setValues([kurang]);
+    // Kolom yang belum ada disisipkan setelah kolom skema sebelumnya, bukan di ujung kanan;
+    // kolom lama tidak dipindah. Kolom sisipan bisa mewarisi format dan dropdown tetangganya,
+    // jadi dikosongkan dulu; aturan yang benar dipasang di bawah.
+    rencanaKolomBaru(ada, header).forEach(function (r) {
+      if (r.posisi === 1) sh.insertColumnBefore(1);
+      else sh.insertColumnAfter(r.posisi - 1);
+      sh.getRange(1, r.posisi, sh.getMaxRows(), 1).clearFormat().clearDataValidations();
+      sh.getRange(1, r.posisi).setValue(r.kolom);
+    });
   }
 
   const kolomSheet = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
