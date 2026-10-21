@@ -105,10 +105,10 @@
   };
 
   const STATUS = {
-    BUKA: ['Buka', 'hijau'], PENUH: ['Penuh', 'kuning'], TUTUP: ['Tutup', 'abu'],
+    BUKA: ['Buka', 'hijau'], PENUH: ['Penuh', 'kuning'], TUTUP: ['Tutup', 'abu'], DI_LUAR_JAM: ['Di luar jam buka', 'abu'],
     Tersedia: ['Stok tersedia', 'hijau'], Terbatas: ['Stok terbatas', 'kuning'], Habis: ['Stok habis', 'abu'],
   };
-  const URUTAN_STATUS = { BUKA: 0, Tersedia: 0, PENUH: 1, Terbatas: 1, TUTUP: 2, Habis: 2 };
+  const URUTAN_STATUS = { BUKA: 0, Tersedia: 0, PENUH: 1, Terbatas: 1, TUTUP: 2, DI_LUAR_JAM: 2, Habis: 2 };
 
   const isi = document.getElementById('isi');
   const pita = document.getElementById('pita');
@@ -372,6 +372,32 @@
     return daftar.filter(function (e) { return e[kolom] === nilai; }).length;
   }
 
+  // Apakah sekarang (jam WIB) di luar semua rentang seperti "09.30 - 16.30" dalam teks jam buka.
+  // Teks tanpa rentang ("24 jam") dianggap selalu buka.
+  function diLuarJamBuka(jam) {
+    const pola = /(\d{1,2})[.:](\d{2})\s*(?:-|–|—|s\/d|sampai)\s*(\d{1,2})[.:](\d{2})/gi;
+    const wib = new Date(Date.now() + 7 * 36e5);
+    const kini = wib.getUTCHours() * 60 + wib.getUTCMinutes();
+    let m;
+    let adaRentang = false;
+    while ((m = pola.exec(String(jam || '')))) {
+      adaRentang = true;
+      const buka = m[1] * 60 + Number(m[2]);
+      const tutup = m[3] * 60 + Number(m[4]);
+      if (buka < tutup ? kini >= buka && kini < tutup : kini >= buka || kini < tutup) return false;
+    }
+    return adaRentang;
+  }
+
+  // Status BUKA dari pengelola hanya berlaku di dalam jam buka, supaya warga tidak datang saat tutup.
+  function statusKini(e) {
+    return e.status === 'BUKA' && diLuarJamBuka(e.jam_buka) ? 'DI_LUAR_JAM' : e.status;
+  }
+
+  function labelKini(cfg, e) {
+    return cfg.label === 'status' ? statusKini(e) : e[cfg.label];
+  }
+
   function angka(n) { return (Number(n) || 0).toLocaleString('id-ID'); }
 
   function persen(e) {
@@ -407,10 +433,11 @@
 
   function halamanBeranda() {
     const ruang = (data && data.ruang) || [];
-    const buka = hitung(ruang, 'status', 'BUKA');
-    const penuh = hitung(ruang, 'status', 'PENUH');
+    const status = ruang.map(statusKini);
+    const buka = status.filter(function (s) { return s === 'BUKA'; }).length;
+    const penuh = status.filter(function (s) { return s === 'PENUH'; }).length;
     // "Belum ada yang buka" hanya bila status semua tempat diketahui; status kosong belum dikonfirmasi.
-    const statusLengkap = ruang.every(function (e) { return STATUS[e.status]; });
+    const statusLengkap = status.every(function (s) { return STATUS[s]; });
     const ringkasRuang = ruang.length
       ? [buka ? '<b>' + buka + ' buka sekarang</b>' : statusLengkap ? 'Belum ada yang buka' : '',
         penuh ? penuh + ' penuh' : '', ruang.length + ' tempat'].filter(Boolean).join(' · ')
@@ -475,7 +502,7 @@
 
   function kartuEntri(cfg, e, i) {
     let pita = '';
-    const st = cfg.label && STATUS[e[cfg.label]];
+    const st = cfg.label && STATUS[labelKini(cfg, e)];
     if (st) {
       pita = '<span class="status status-' + st[1] + '"><span class="status-titik" aria-hidden="true"></span>' + st[0] + '</span>';
     } else if (/IGD 24 jam/.test(e.layanan || '')) {
@@ -549,7 +576,7 @@
     if (!semua.length) return 'Belum ada data terverifikasi';
     let teks = semua.length + ' ' + cfg.satuan;
     if (cfg.tab === 'ruang') {
-      const buka = hitung(semua, 'status', 'BUKA');
+      const buka = semua.filter(function (e) { return statusKini(e) === 'BUKA'; }).length;
       if (buka) teks += ' · ' + buka + ' buka sekarang';
     }
     if (cfg.tab === 'oksigen') {
@@ -595,8 +622,8 @@
       return salin;
     }).sort(function (a, b) {
       // Status kosong (belum dikonfirmasi) diurutkan setelah yang penuh, sebelum yang tutup.
-      const sa = a[cfg.label] in URUTAN_STATUS ? URUTAN_STATUS[a[cfg.label]] : 1.5;
-      const sb = b[cfg.label] in URUTAN_STATUS ? URUTAN_STATUS[b[cfg.label]] : 1.5;
+      const sa = labelKini(cfg, a) in URUTAN_STATUS ? URUTAN_STATUS[labelKini(cfg, a)] : 1.5;
+      const sb = labelKini(cfg, b) in URUTAN_STATUS ? URUTAN_STATUS[labelKini(cfg, b)] : 1.5;
       if (sa !== sb) return sa - sb;
       const ja = typeof a._jarak === 'number' ? a._jarak : Infinity;
       const jb = typeof b._jarak === 'number' ? b._jarak : Infinity;
@@ -727,6 +754,19 @@
 
   // ---------- data ----------
 
+  // Relawan sering mengetik "-" untuk "tidak diketahui"; anggap kosong supaya kartu tidak menulis "Kapasitas - orang".
+  function bersihkan(d) {
+    Object.keys(d).forEach(function (tab) {
+      if (!Array.isArray(d[tab])) return;
+      d[tab].forEach(function (e) {
+        Object.keys(e).forEach(function (k) {
+          if (typeof e[k] === 'string' && /^[\s\-–—?]*$/.test(e[k])) e[k] = null;
+        });
+      });
+    });
+    return d;
+  }
+
   async function muatData(paksa) {
     if (!paksa && data && Date.now() - diambilPada < SEGARKAN_MS) return false;
     let berubah = false;
@@ -736,7 +776,7 @@
       const teks = await res.text();
       berubah = teks !== teksData;
       teksData = teks;
-      data = JSON.parse(teks);
+      data = bersihkan(JSON.parse(teks));
       diambilPada = Date.now();
       dariSimpanan = false;
       if (!DEMO) simpan(KUNCI_SIMPAN, JSON.stringify({ data: data, diambil: diambilPada }));
@@ -745,7 +785,7 @@
         try {
           const lama = JSON.parse(baca(KUNCI_SIMPAN));
           if (lama && lama.data) {
-            data = lama.data;
+            data = bersihkan(lama.data);
             diambilPada = lama.diambil;
             berubah = true;
           }
