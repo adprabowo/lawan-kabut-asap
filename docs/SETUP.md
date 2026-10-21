@@ -88,11 +88,9 @@ masukkan rekening atas nama organisasi, bukan rekening pribadi.
 
 ## 6. Memperbarui Apps Script dari repo
 
-Setiap kali kode di folder `apps-script/` berubah:
+Setelah penyiapan sekali di [DEPLOY.md bagian C](DEPLOY.md#bagian-c-deploy-apps-script-otomatis),
+`scripts/deploy.sh` mengirim kode Apps Script, memperbarui versi web app (URL `/exec` tetap sama),
+dan Sheet serta Form menyesuaikan diri dengan skema baru dalam 5 menit. Tidak ada langkah manual.
 
-1. Salin ulang semua file `.gs` dan `appsscript.json` ke editor Apps Script.
-2. Jalankan `siapkan()`. Fungsi ini menambah kolom dan tab baru, menambah pertanyaan dan pilihan
-   jawaban baru ke Form yang sudah ada, dan tidak mengubah data atau centang `tampil` yang sudah ada.
-   Bila Google meminta izin baru (misalnya "terhubung ke layanan eksternal" untuk membuka tautan
-   pendek Google Maps), setujui seperti saat pertama.
-3. **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**. URL `/exec` tetap sama.
+Cara manual (bila clasp belum disiapkan): salin semua file `apps-script/` ke editor, jalankan
+`siapkan()`, lalu **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**.

@@ -28,6 +28,27 @@ test('kode tingkat atas tiap .gs tidak bergantung pada file lain (Apps Script me
   }
 });
 
+test('setiap layanan Google yang dipakai kode tercantum di oauthScopes appsscript.json', () => {
+  // Izin dicantumkan eksplisit supaya deploy otomatis tidak memicu permintaan izin baru;
+  // izin yang kurang membuat web app berhenti mengirim data tanpa terlihat.
+  const kode = fs.readdirSync(dir).filter((f) => f.endsWith('.gs'))
+    .map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+  const izin = JSON.parse(fs.readFileSync(path.join(dir, 'appsscript.json'), 'utf8')).oauthScopes;
+  const butuh = {
+    'SpreadsheetApp.': 'spreadsheets',
+    'FormApp.': 'forms',
+    'DriveApp.': 'drive',
+    'ScriptApp.': 'script.scriptapp',
+    'UrlFetchApp.': 'script.external_request',
+    '.getEmail(': 'userinfo.email',
+  };
+  for (const [layanan, cakupan] of Object.entries(butuh)) {
+    if (kode.includes(layanan)) {
+      assert.ok(izin.includes('https://www.googleapis.com/auth/' + cakupan), `${layanan} butuh ${cakupan}`);
+    }
+  }
+});
+
 test('skema punya 8 tab: 7 tab rencana awal ditambah donasi', () => {
   assert.deepEqual(Object.keys(ctx.SKEMA),
     ['ruang', 'oksigen', 'air_bersih', 'kontak_darurat', 'donasi', 'udara', 'faq', 'log']);

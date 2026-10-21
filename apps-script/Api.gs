@@ -8,6 +8,12 @@
 
 function doGet(e) {
   if (!tokenSah_(e.parameter.token)) return balasJson_({ ok: false, galat: 'token' });
+  // Kode baru yang di-deploy otomatis menyesuaikan Sheet dan Form; data tetap dikirim bila gagal.
+  try {
+    migrasiBilaPerlu_();
+  } catch (err) {
+    console.error('Migrasi skema gagal: ' + err);
+  }
   const ss = SpreadsheetApp.openById(PROP.getProperty('SHEET_ID'));
   const lembar = {};
   Object.keys(SKEMA).forEach(function (tab) {

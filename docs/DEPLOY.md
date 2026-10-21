@@ -145,6 +145,25 @@ menampilkan "Belum ada data".
 
 ---
 
+## Bagian C. Deploy Apps Script otomatis
+
+Dilakukan sekali. Setelah itu `scripts/deploy.sh` juga memperbarui Apps Script, dan perubahan
+skema (tab, kolom, pertanyaan Form) diterapkan sendiri oleh web app dalam 5 menit.
+
+1. Login sebagai pemilik Apps Script (hello.iaitbjambi@gmail.com), buka
+   <https://script.google.com/home/usersettings>, lalu nyalakan **Google Apps Script API**.
+2. Di VPS jalankan `npx clasp login --no-localhost` dari folder repo. Buka tautan yang muncul di
+   browser yang hanya login ke akun pemilik (Incognito), setujui, lalu salin seluruh alamat dari
+   address bar (halaman `localhost:8888` memang gagal dimuat) dan tempel ke clasp. Token tersimpan
+   di `/root/.clasprc.json`; cabut kapan saja di <https://myaccount.google.com/permissions>.
+3. Buat `apps-script/.clasp.json` dari `.clasp.json.example` dengan `scriptId` proyek
+   (`npx clasp list` menampilkan ID-nya).
+4. Jalankan `scripts/deploy.sh`. Bila web app membutuhkan izin baru, skrip memberi tahu: buka editor
+   Apps Script, jalankan `siapkan()` sekali, dan setujui. Izin sudah dicantumkan di
+   `appsscript.json`, jadi ini hanya terjadi bila daftar izin itu berubah.
+
+---
+
 ## Alur kerja relawan
 
 Lihat [SETUP.md](SETUP.md#3-alur-kerja-relawan): isi Form → relawan verifikasi mencentang
@@ -160,3 +179,5 @@ Lihat [SETUP.md](SETUP.md#3-alur-kerja-relawan): isi Form → relawan verifikasi
 | `/exec?token=…` membalas `galat: token` | Token salah; cek Script Properties `API_TOKEN` |
 | Data Sheet tidak muncul di web | Kolom `tampil` belum dicentang, atau tunggu cron 5 menit |
 | Izin Apps Script gagal terus | Login lebih dari satu akun Google; pakai Incognito (B1) |
+| `clasp push`: *User has not enabled the Apps Script API* | Langkah C1 belum dilakukan |
+| deploy.sh: *web app Apps Script tidak mengirim data* | Kode butuh izin baru; jalankan `siapkan()` sekali di editor |

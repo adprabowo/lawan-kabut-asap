@@ -4,5 +4,8 @@
   "license": "MIT",
   "scripts": {
     "test": "node --test test/*.test.js test/*.test.mjs"
+  },
+  "devDependencies": {
+    "@google/clasp": "3.4.1"
   }
 }

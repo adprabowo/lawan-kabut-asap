@@ -46,17 +46,52 @@ const PARAGRAF_FORM = ['alamat', 'catatan_internal'];
 const KOLOM_WAKTU = ['diubah_pada', 'terverifikasi_pada', 'cek_ulang_sebelum', 'waktu', 'direview_pada'];
 
 function siapkan() {
+  const ss = siapkanStruktur_();
+  pasangPemicu_(ss);
+  PROP.setProperty('SIDIK_SKEMA', sidikSkema_());
+  if (!PROP.getProperty('API_TOKEN')) buatTokenApi();
+  cetakRingkasan();
+}
+
+/** Tab, kolom, validasi, dan Form sesuai SKEMA. Mengembalikan spreadsheet-nya. */
+function siapkanStruktur_() {
   const ss = ambilSpreadsheet_();
   Object.keys(SKEMA).forEach(function (tab) { siapkanTab_(ss, tab); });
   hapusLembarBawaan_(ss);
+  let formBaru = false;
   Object.keys(PERTANYAAN_FORM).forEach(function (tab) {
-    siapkanFormDirektori_(ss, tab);
+    formBaru = siapkanFormDirektori_(ss, tab) || formBaru;
     lengkapiForm_(tab);
   });
-  siapkanFormLapor_(ss);
-  pasangPemicu_(ss);
-  if (!PROP.getProperty('API_TOKEN')) buatTokenApi();
-  cetakRingkasan();
+  formBaru = siapkanFormLapor_(ss) || formBaru;
+  // Form baru butuh pemicu onFormSubmit; pemicu lama dibiarkan bila tidak ada Form baru.
+  if (formBaru) pasangPemicu_(ss);
+  return ss;
+}
+
+// Berubah setiap kali SKEMA, urutan pertanyaan, atau label Form di kode berubah.
+function sidikSkema_() {
+  const teks = JSON.stringify([SKEMA, PERTANYAAN_FORM, LABEL_FORM]);
+  return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, teks));
+}
+
+/**
+ * Menyesuaikan Sheet dan Form dengan kode terbaru tanpa siapkan() manual. Dipanggil doGet,
+ * yang diakses Worker tiap 5 menit; bekerja hanya bila sidik skema berubah sejak migrasi terakhir.
+ */
+function migrasiBilaPerlu_() {
+  const sidik = sidikSkema_();
+  if (PROP.getProperty('SIDIK_SKEMA') === sidik) return;
+  const kunci = LockService.getScriptLock();
+  if (!kunci.tryLock(1000)) return;
+  try {
+    if (PROP.getProperty('SIDIK_SKEMA') === sidik) return;
+    siapkanStruktur_();
+    PROP.setProperty('SIDIK_SKEMA', sidik);
+    console.log('Migrasi skema selesai: ' + sidik);
+  } finally {
+    kunci.releaseLock();
+  }
 }
 
 function ambilSpreadsheet_() {
@@ -124,7 +159,7 @@ function hapusLembarBawaan_(ss) {
 
 function siapkanFormDirektori_(ss, tab) {
   const kunci = 'FORM_' + tab;
-  if (PROP.getProperty(kunci)) return;
+  if (PROP.getProperty(kunci)) return false;
 
   const s = SKEMA[tab];
   const form = FormApp.create(judulForm_(s));
@@ -141,6 +176,7 @@ function siapkanFormDirektori_(ss, tab) {
   PROP.setProperty(kunci, form.getId());
   PROP.setProperty('PETA_' + form.getId(), JSON.stringify({ tab: tab, item: peta }));
   pindahkanKeFolderSheet_(ss, form.getId());
+  return true;
 }
 
 function judulForm_(s) {
@@ -199,7 +235,7 @@ function lengkapiForm_(tab) {
 }
 
 function siapkanFormLapor_(ss) {
-  if (PROP.getProperty('FORM_lapor')) return;
+  if (PROP.getProperty('FORM_lapor')) return false;
 
   const judulDirektori = Object.keys(PERTANYAAN_FORM).map(function (t) { return SKEMA[t].judul; });
   const form = FormApp.create('Laporkan Data Salah — Siaga Asap Jambi');
@@ -233,6 +269,7 @@ function siapkanFormLapor_(ss) {
     },
   }));
   pindahkanKeFolderSheet_(ss, form.getId());
+  return true;
 }
 
 function pindahkanKeFolderSheet_(ss, fileId) {
