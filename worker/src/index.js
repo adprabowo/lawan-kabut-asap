@@ -4,8 +4,8 @@
  * GET  /api/data                         seluruh data publik (dari satu key KV)
  * GET  /api/terdekat?lat=&lng=&jenis=&n=  entri terdekat: ruang | oksigen
  * POST /api/status   (Bearer BOT_TOKEN)  {kode, status, dari} dari pengelola ruang
- * POST /api/segarkan (Bearer BOT_TOKEN)  tarik ulang data sekarang
- * cron tiap 5 menit                      tarik data dari Apps Script
+ * POST /api/segarkan (Bearer BOT_TOKEN)  tarik ulang data sekarang, termasuk PM2.5 BMKG
+ * cron tiap 5 menit                      tarik data dari Apps Script; PM2.5 BMKG tiap 15 menit
  */
 import { bacaData, kirimStatus, segarkan } from './data.js';
 import { dataContoh } from './data-contoh.js';
@@ -114,7 +114,7 @@ export default {
       case 'POST /api/segarkan':
         if (!botSah(request, env)) return json({ galat: 'Tidak berwenang' }, 401);
         try {
-          return json(await segarkan(env));
+          return json(await segarkan(env, { bmkg: true }));
         } catch (err) {
           return json({ galat: err.message }, 502);
         }
@@ -124,8 +124,11 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(segarkan(env).then(
-      (h) => console.log(h.berubah ? `data diperbarui ${h.hash.slice(0, 8)}` : 'data tetap'),
+    // BMKG memperbarui PM2.5 tiap jam; cukup dibaca pada menit 0, 15, 30, dan 45.
+    const bmkg = new Date(event.scheduledTime).getUTCMinutes() % 15 === 0;
+    ctx.waitUntil(segarkan(env, { bmkg, kini: event.scheduledTime || Date.now() }).then(
+      (h) => console.log((h.berubah ? `data diperbarui ${h.hash.slice(0, 8)}` : 'data tetap') +
+        (bmkg ? `, BMKG ${h.bmkg} lokasi` : '')),
       (err) => console.error('segarkan gagal:', err.message),
     ));
   },

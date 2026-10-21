@@ -380,6 +380,7 @@ main { display: block; padding-block: 16px 8px; }
 .kategori { margin: 10px 0 0; font: 800 clamp(24px, 7vw, 30px)/1.1 var(--huruf-tampil); letter-spacing: -.01em; }
 .kategori-kosong { margin-top: 22px; font-size: clamp(30px, 9vw, 40px); }
 .langit-ket { max-width: 30ch; margin: 10px 0 0; font-size: 15px; opacity: .9; }
+.langit-sumber { max-width: 34ch; margin: 8px 0 0; font-size: 13px; font-weight: 500; opacity: .85; }
 
 .tanah { position: relative; z-index: 2; display: grid; gap: 14px; padding: 2px 20px 20px; }
 

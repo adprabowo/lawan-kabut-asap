@@ -3,6 +3,7 @@ import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../worker/src/index.js';
 import { jarakKm, terdekat } from '../worker/src/geo.js';
+import { URL_BMKG, ispuDariPm25, kategoriIspu, uraiBmkg, waktuPengukuran } from '../worker/src/bmkg.js';
 
 function kvPalsu() {
   const isi = new Map();
@@ -31,7 +32,28 @@ const DATA = {
   oksigen: [], air_bersih: [], kontak_darurat: [], udara: [], faq: [], lapor_url: null,
 };
 
-let env, ctx, panggilan, balasanAppsScript;
+// Halaman PM2.5 BMKG tiruan: payload Nuxt datar, objek stasiun menunjuk nilainya lewat indeks.
+function htmlBmkg(stasiun) {
+  const isi = [['ShallowReactive', 1], { data: 2 }, []];
+  for (const s of stasiun) {
+    const i = isi.length;
+    isi.push({ nama_file: i + 1, LOKASI: i + 2, JAM: i + 3, PM25: i + 4, KONDISI: i + 5 }, s.file, s.lokasi, s.jam, s.pm25, '');
+    isi[2].push(i);
+  }
+  return '<html><body><script type="application/json" data-nuxt-data="nuxt-app" data-ssr="true" id="__NUXT_DATA__">' +
+    JSON.stringify(isi) + '</script></body></html>';
+}
+
+const STASIUN = [
+  { file: 'pm25_jm3.xml', lokasi: 'Kota Jambi', jam: 20, pm25: 207.8 },
+  { file: 'pm25_jm4.xml', lokasi: 'Muaro Jambi', jam: 20, pm25: 191.1 },
+  { file: 'pm25_plb4.xml', lokasi: 'Musi 2 Palembang', jam: 20, pm25: 640.5 },
+  { file: 'pm25_jm9.xml', lokasi: 'Kerinci', jam: 20, pm25: null },
+];
+const KINI = Date.UTC(2026, 9, 21, 14, 15); // 21 Okt 2026 pukul 21.15 WIB
+const jadwal = (menitUtc) => ({ scheduledTime: Date.UTC(2026, 9, 21, 14, menitUtc) });
+
+let env, ctx, panggilan, balasanAppsScript, balasanBmkg;
 beforeEach(() => {
   env = {
     DATA: kvPalsu(),
@@ -44,9 +66,10 @@ beforeEach(() => {
   ctx = { waitUntil: (p) => tunggu.push(p), selesai: () => Promise.all(tunggu) };
   panggilan = [];
   balasanAppsScript = () => JSON.stringify(DATA);
+  balasanBmkg = () => htmlBmkg(STASIUN);
   globalThis.fetch = async (url, opsi = {}) => {
     panggilan.push({ url: String(url), opsi });
-    return new Response(balasanAppsScript(String(url), opsi));
+    return new Response(String(url) === URL_BMKG ? balasanBmkg() : balasanAppsScript(String(url), opsi));
   };
 });
 
@@ -158,6 +181,64 @@ test('?contoh=1 memberi data contoh hanya bila MODE_CONTOH=1, walau KV sudah ber
   const d = await res.json();
   assert.equal(d.contoh, undefined);
   assert.equal(d.ruang.length, 5);
+});
+
+test('ispuDariPm25 mengikuti batas Permen LHK P.14/2020', () => {
+  const kasus = [[0, 0], [15.5, 50], [15.6, 51], [55.4, 100], [55.5, 101], [150.4, 200], [191.1, 241],
+    [207.8, 258], [250.4, 300], [250.5, 301], [500, 500], [640.5, 500]];
+  for (const [pm25, ispu] of kasus) assert.equal(ispuDariPm25(pm25), ispu, `PM2.5 ${pm25}`);
+  assert.equal(ispuDariPm25(-1), null);
+  assert.equal(kategoriIspu(ispuDariPm25(55.4)), 'Sedang');
+  assert.equal(kategoriIspu(ispuDariPm25(55.5)), 'Tidak Sehat');
+  assert.equal(kategoriIspu(ispuDariPm25(207.8)), 'Sangat Tidak Sehat');
+  assert.equal(kategoriIspu(ispuDariPm25(250.5)), 'Berbahaya');
+});
+
+test('waktuPengukuran: jam BMKG yang belum tiba hari ini (WIB) berarti kemarin', () => {
+  assert.equal(waktuPengukuran(20, KINI), '2026-10-21T13:00:00.000Z');
+  assert.equal(waktuPengukuran(22, KINI), '2026-10-20T15:00:00.000Z');
+  assert.equal(waktuPengukuran(23, Date.UTC(2026, 9, 21, 17, 30)), '2026-10-21T16:00:00.000Z');
+});
+
+test('uraiBmkg: hanya stasiun Jambi yang berangka, lengkap dengan ISPU dan waktu', () => {
+  assert.deepEqual(uraiBmkg(htmlBmkg(STASIUN), KINI), [
+    { waktu: '2026-10-21T13:00:00.000Z', lokasi: 'Kota Jambi', ispu: 258, kategori: 'Sangat Tidak Sehat', sumber: 'PM2.5 BMKG', pm25: 207.8 },
+    { waktu: '2026-10-21T13:00:00.000Z', lokasi: 'Muaro Jambi', ispu: 241, kategori: 'Sangat Tidak Sehat', sumber: 'PM2.5 BMKG', pm25: 191.1 },
+  ]);
+  const mati = [{ lokasi: 'Kota Jambi', jam: 20, pm25: '-' }, { lokasi: 'Muaro Jambi', jam: null, pm25: 80 }];
+  assert.deepEqual(uraiBmkg(htmlBmkg(mati), KINI), [], 'stasiun tanpa angka atau jam diabaikan, bukan dibaca 0');
+  assert.throws(() => uraiBmkg('<html>pemeliharaan</html>', KINI), /__NUXT_DATA__/);
+  assert.throws(() => uraiBmkg(htmlBmkg([]), KINI), /tidak ada data stasiun/);
+});
+
+test('cron menit 15 menggabungkan PM2.5 BMKG ke udara; isian relawan yang lebih baru diutamakan', async () => {
+  balasanAppsScript = () => JSON.stringify({ ...DATA, udara: [
+    { waktu: '2026-10-21T13:30:00.000Z', lokasi: 'Kota Jambi', ispu: 303, kategori: 'Berbahaya', sumber: 'ISPU KLHK' },
+    { waktu: '2026-10-21T12:00:00.000Z', lokasi: 'Muaro Jambi', ispu: 150, kategori: 'Tidak Sehat', sumber: 'relawan' },
+    { waktu: '2026-10-21T10:00:00.000Z', lokasi: 'Bungo', ispu: 180, kategori: 'Tidak Sehat', sumber: 'DLH Bungo' },
+  ] });
+  await worker.scheduled(jadwal(15), env, ctx); await ctx.selesai();
+  assert.equal(panggilan.filter((p) => p.url === URL_BMKG).length, 1);
+  const udara = (await (await worker.fetch(req('/api/data'), env, ctx)).json()).udara;
+  assert.deepEqual(udara.map((u) => [u.lokasi, u.ispu, u.sumber]), [
+    ['Bungo', 180, 'DLH Bungo'], ['Kota Jambi', 303, 'ISPU KLHK'], ['Muaro Jambi', 241, 'PM2.5 BMKG'],
+  ]);
+});
+
+test('BMKG hanya dibaca tiap 15 menit; pembacaan terakhir dipakai saat BMKG gagal, paling lama 6 jam', async () => {
+  const keBmkg = () => panggilan.filter((p) => p.url === URL_BMKG).length;
+  const udara = async () => (await (await worker.fetch(req('/api/data'), env, ctx)).json()).udara;
+  await worker.scheduled(jadwal(15), env, ctx); await ctx.selesai();
+  await worker.scheduled(jadwal(20), env, ctx); await ctx.selesai();
+  assert.equal(keBmkg(), 1, 'menit 20 tidak membaca BMKG');
+  balasanBmkg = () => '<html>pemeliharaan</html>';
+  await worker.scheduled(jadwal(30), env, ctx); await ctx.selesai();
+  assert.equal(keBmkg(), 2);
+  assert.deepEqual((await udara()).map((u) => [u.lokasi, u.ispu]), [['Kota Jambi', 258], ['Muaro Jambi', 241]]);
+  assert.equal(env.DATA.tulis, 1, 'data tidak berubah sejak pembacaan pertama');
+  // Lebih dari 6 jam setelah pengukuran 20.00 WIB angkanya tidak ditampilkan lagi.
+  await worker.scheduled({ scheduledTime: Date.UTC(2026, 9, 21, 19, 5) }, env, ctx); await ctx.selesai();
+  assert.deepEqual(await udara(), []);
 });
 
 test('rute tidak dikenal 404', async () => {

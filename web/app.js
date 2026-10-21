@@ -216,6 +216,20 @@
       .sort(function (a, b) { return Number(b.ispu) - Number(a.ispu); });
   }
 
+  function jamWib(iso) {
+    const t = new Date(Date.parse(iso) + 7 * 36e5);
+    return String(t.getUTCHours()).padStart(2, '0') + '.' + String(t.getUTCMinutes()).padStart(2, '0');
+  }
+
+  // Asal angka: PM2.5 terukur BMKG yang dihitung ke ISPU (lihat worker/src/bmkg.js), atau sumber isian relawan.
+  function htmlSumber(u) {
+    if (u.sumber === 'PM2.5 BMKG' && typeof u.pm25 === 'number' && Date.parse(u.waktu)) {
+      return esc('Dihitung dari PM2.5 ' + u.pm25.toLocaleString('id-ID', { maximumFractionDigits: 1 }) +
+        ' µg/m³ (BMKG, ' + jamWib(u.waktu) + ' WIB)');
+    }
+    return u.sumber ? esc('Sumber: ' + u.sumber) : '';
+  }
+
   function udaraAktif(daftar) {
     return daftar.find(function (u) { return u.lokasi === lokasiUdara; }) ||
       daftar.find(function (u) { return u.lokasi === 'Kota Jambi'; }) || daftar[0];
@@ -291,7 +305,7 @@
         '<div class="langit-atas">' + htmlLukisan() + '<div class="langit-isi">' +
         '<p class="alis">Udara Jambi</p>' +
         '<p class="kategori kategori-kosong" id="langit-kategori">Angka ISPU belum masuk</p>' +
-        '<p class="langit-ket">Relawan memperbarui angka ISPU tiga kali sehari.</p></div></div>' +
+        '<p class="langit-ket">Angka diperbarui otomatis dari pengukuran PM2.5 BMKG setiap jam.</p></div></div>' +
         '<div class="tanah">' + htmlSkala(null) +
         '<p class="saran">Sambil menunggu, <a href="#/panduan/ispu">pelajari arti setiap angka ISPU</a> dan apa yang perlu dilakukan.</p>' +
         '</div></section>';
@@ -299,13 +313,15 @@
     const u = udaraAktif(daftar);
     const nama = kategoriDari(u);
     const kat = KATEGORI[nama];
+    const sumber = htmlSumber(u);
     return '<section class="langit kat-' + kat.kelas + ' muncul" id="langit" aria-labelledby="langit-judul">' +
       '<div class="langit-atas">' + htmlLukisan() + '<div class="langit-isi">' +
       '<p class="alis"><span class="titik-hidup" aria-hidden="true"></span><span id="langit-lokasi">Udara · ' + esc(u.lokasi) + '</span>' +
       '<span class="alis-waktu" id="langit-waktu">' + esc(relatif(u.waktu)) + '</span></p>' +
       '<p class="angka" id="langit-judul"><span class="angka-nilai" id="langit-angka" data-nilai="' + Number(u.ispu) + '">' +
       Number(u.ispu) + '</span><span class="angka-satuan">ISPU</span></p>' +
-      '<p class="kategori" id="langit-kategori">' + esc(nama) + '</p></div></div>' +
+      '<p class="kategori" id="langit-kategori">' + esc(nama) + '</p>' +
+      '<p class="langit-sumber" id="langit-sumber"' + (sumber ? '' : ' hidden') + '>' + sumber + '</p></div></div>' +
       '<div class="tanah">' + htmlSkala(Number(u.ispu)) + '<p class="saran" id="langit-saran">' + htmlSaran(kat) + '</p>' +
       htmlPilihLokasi(daftar, u.lokasi) + '</div></section>';
   }
@@ -354,6 +370,9 @@
     document.getElementById('langit-lokasi').textContent = 'Udara · ' + u.lokasi;
     document.getElementById('langit-waktu').textContent = relatif(u.waktu);
     document.getElementById('langit-kategori').textContent = namaKat;
+    const sumber = document.getElementById('langit-sumber');
+    sumber.innerHTML = htmlSumber(u);
+    sumber.hidden = !sumber.innerHTML;
     document.getElementById('langit-saran').innerHTML = htmlSaran(kat);
     const angka = document.getElementById('langit-angka');
     animasiAngka(angka, Number(angka.textContent), Number(u.ispu));

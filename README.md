@@ -7,6 +7,7 @@ Asap IA-ITB Jambi 2026. Dibangun di paket gratis Google dan Cloudflare.
 ```
 Relawan ─ Google Form ─ Google Sheet (privat) ─ Apps Script doGet (kolom publik, ber-token)
                                                              │ cron 5 menit → 1 key KV
+                                  PM2.5 BMKG (tiap 15 menit) ─┘
               Warga ─ lawan-kabut-asap.<subdomain>.workers.dev (satu Worker: web/ + /api/*)
               Bot WhatsApp ─ /api/data, /api/status
 ```
@@ -27,6 +28,8 @@ Relawan ─ Google Form ─ Google Sheet (privat) ─ Apps Script doGet (kolom p
 - [x] Hari 2: `doGet`/`doPost`, cron Worker ke KV, `/api/data`, `/api/terdekat`, `/api/status`
 - [x] Hari 3: web MVP + PWA (data contoh sampai Sheet tersambung)
 - [x] Menu rumah sakit/faskes, ambulans, edukasi (8 materi), dan donasi
+- [x] ISPU otomatis Kota Jambi dan Muaro Jambi dari PM2.5 per jam BMKG
+- [x] 39 RS dan 100 puskesmas dari RS Online Kemenkes dan OpenStreetMap (bertanda belum dicek relawan)
 - [ ] Hari 4: bot WhatsApp v1
 - [ ] Hari 5–7: uji, peluncuran, peta, FAQ, serah terima
 
@@ -56,3 +59,5 @@ Bukan bagian dari lisensi MIT:
   (`web/logo/`, `aset/logo-asli/`) adalah milik organisasi masing-masing.
 - Huruf Archivo dan Plus Jakarta Sans: SIL Open Font License 1.1 (`web/fonts/LICENSE-*.txt`).
 - Sebagian besar ikon dari [Lucide](https://lucide.dev), lisensi ISC (keterangan di `web/ikon.js`).
+- Data: PM2.5 per jam dari [BMKG](https://www.bmkg.go.id/kualitas-udara/pm25); data rumah sakit dari
+  RS Online Kemenkes; lokasi faskes © kontributor [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL).

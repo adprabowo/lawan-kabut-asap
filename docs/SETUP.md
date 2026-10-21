@@ -46,7 +46,10 @@ Atau lewat clasp: `npm i -g @google/clasp`, `clasp login`, `clasp create --type 
    (ruang dan oksigen 1 hari, air bersih 3 hari, kontak darurat 14 hari).
 3. Laporan dari warga lewat Form lapor masuk ke `log`, ditambahkan ke `catatan_internal`, dan
    `cek_ulang_sebelum` entri itu diset ke hari ini supaya segera dicek.
-4. Tab `udara`: isi `lokasi` dan `ispu`; `waktu` dan `kategori` terisi otomatis.
+4. Tab `udara`: isi `lokasi`, `ispu`, dan `sumber`; `waktu` dan `kategori` terisi otomatis.
+   Kota Jambi dan Muaro Jambi sudah terisi otomatis oleh Worker dari PM2.5 per jam BMKG
+   (dibaca tiap 15 menit, dikonversi ke ISPU menurut Permen LHK P.14/2020; tidak masuk ke Sheet).
+   Per lokasi, web menampilkan pembacaan paling baru, dari BMKG maupun isian di tab ini.
 5. Tab `faq`: isi pertanyaan dan jawaban; isi `direview_oleh` setelah nakes menyetujui.
    Hanya FAQ yang sudah direview yang nanti ditampilkan.
 
