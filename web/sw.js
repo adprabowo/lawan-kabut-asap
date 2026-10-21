@@ -1,6 +1,10 @@
 // Service worker: tampilan web tetap terbuka saat sinyal lemah. Data disimpan oleh app.js.
-const CACHE = 'lka-v1';
-const CANGKANG = ['/', '/index.html', '/style.css', '/app.js', '/panduan.js', '/icon.svg', '/manifest.webmanifest'];
+const CACHE = 'lka-v2';
+const CANGKANG = [
+  '/', '/index.html', '/style.css', '/app.js', '/ikon.js', '/panduan.js', '/icon.svg', '/manifest.webmanifest',
+  '/fonts/archivo-tampil.woff2', '/fonts/plus-jakarta-sans.woff2',
+  '/logo/ia-itb-jambi-kepala.webp', '/logo/ia-itb-jambi.webp', '/logo/jdm.webp', '/logo/bakastra-hipmi-jambi.webp',
+];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CANGKANG)).then(() => self.skipWaiting()));

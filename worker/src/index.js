@@ -38,15 +38,20 @@ function botSah(request, env) {
   return Boolean(env.BOT_TOKEN) && samaPersis(auth, `Bearer ${env.BOT_TOKEN}`);
 }
 
-/** Data dari KV; selama KV kosong dan MODE_CONTOH = "1", pakai data contoh untuk demo. */
-async function ambilData(env) {
+/**
+ * Data dari KV. Selama MODE_CONTOH = "1", data contoh dipakai kalau KV masih kosong
+ * atau kalau diminta lewat ?contoh=1 (web dengan ?demo=1, untuk presentasi).
+ */
+async function ambilData(env, url) {
+  const contohDiminta = url && url.searchParams.get('contoh') === '1';
+  if (env.MODE_CONTOH === '1' && contohDiminta) return { teks: JSON.stringify(dataContoh()), metadata: {} };
   const data = await bacaData(env);
   if (data || env.MODE_CONTOH !== '1') return data;
   return { teks: JSON.stringify(dataContoh()), metadata: {} };
 }
 
-async function apiData(env) {
-  const data = await ambilData(env);
+async function apiData(url, env) {
+  const data = await ambilData(env, url);
   if (!data) return json({ galat: 'Data belum tersedia' }, 503);
   return new Response(data.teks, {
     headers: {
@@ -101,7 +106,7 @@ export default {
     const rute = `${request.method} ${url.pathname}`;
     switch (rute) {
       case 'GET /api/data':
-        return apiData(env);
+        return apiData(url, env);
       case 'GET /api/terdekat':
         return apiTerdekat(url, env);
       case 'POST /api/status':

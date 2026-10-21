@@ -4,39 +4,74 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Lawan Kabut Asap Jambi</title>
-  <meta name="description" content="Ruang aman asap, oksigen, air bersih, kontak darurat, dan panduan kesehatan saat kabut asap di Provinsi Jambi.">
-  <meta name="theme-color" content="#0f5132">
+  <meta name="description" content="Kualitas udara, ruang aman asap, oksigen, air bersih, kontak darurat, dan panduan kesehatan saat kabut asap di Provinsi Jambi.">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#151931" media="(prefers-color-scheme: dark)">
+  <meta property="og:title" content="Lawan Kabut Asap Jambi">
+  <meta property="og:description" content="Cek udara, cari ruang aman asap, oksigen, dan air bersih terdekat di Jambi.">
+  <meta property="og:image" content="/logo/ia-itb-jambi.webp">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="preload" href="/fonts/archivo-tampil.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/plus-jakarta-sans.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <a class="lewati" href="#isi">Lewati ke isi</a>
+
   <header class="kepala">
-    <a href="#/" class="merek" aria-label="Beranda Lawan Kabut Asap">
-      <img src="/icon.svg" alt="" width="32" height="32">
-      <span><strong>Lawan Kabut Asap</strong><small>Siaga Asap Jambi</small></span>
-    </a>
+    <div class="bungkus">
+      <a href="#/" class="merek" aria-label="Lawan Kabut Asap, beranda">
+        <span class="merek-logo"><img src="/logo/ia-itb-jambi-kepala.webp" alt="Ikatan Alumni ITB Jambi" width="55" height="36"></span>
+        <span class="merek-garis" aria-hidden="true"></span>
+        <span class="merek-teks"><strong>Lawan Kabut Asap</strong><span>Program Siaga Asap · Jambi 2026</span></span>
+      </a>
+      <button type="button" class="tombol-ikon" id="tombol-bagikan" aria-label="Bagikan tautan web ini"></button>
+    </div>
   </header>
 
-  <div id="pita" class="pita" hidden></div>
+  <div class="bungkus"><div id="pita" class="pita" role="status" hidden></div></div>
 
-  <main id="isi" tabindex="-1">
-    <p class="memuat">Memuat data…</p>
+  <main id="isi" class="bungkus" tabindex="-1">
+    <section class="langit kat-kosong memuat" aria-label="Memuat kualitas udara">
+      <div class="langit-atas">
+        <div class="lukisan" aria-hidden="true">
+          <div class="matahari"></div>
+          <div class="asap asap-1"></div>
+          <div class="asap asap-2"></div>
+        </div>
+        <div class="langit-isi">
+          <span class="kerangka kerangka-kecil"></span>
+          <span class="kerangka kerangka-besar"></span>
+          <span class="kerangka kerangka-sedang"></span>
+        </div>
+      </div>
+      <div class="tanah"><span class="kerangka" style="height: 40px"></span></div>
+    </section>
+    <div class="kerangka-ubin" aria-hidden="true"></div>
   </main>
 
+  <div class="bungkus">
+    <footer class="kaki">
+      <p>Data tempat diisi dan dicek relawan sebelum tampil. Informasi kesehatan di sini bersifat umum, bukan pengganti pemeriksaan tenaga kesehatan.</p>
+      <div class="kaki-baris">
+        <a href="https://github.com/adprabowo/lawan-kabut-asap" target="_blank" rel="noopener">Kode terbuka (MIT)</a>
+        <button type="button" id="tombol-pasang" hidden>Pasang di layar utama HP</button>
+      </div>
+    </footer>
+  </div>
+
   <nav class="darurat" aria-label="Nomor darurat">
-    <a href="tel:112" class="tombol-darurat">📞 112 Darurat</a>
-    <a href="tel:119" class="tombol-darurat">🚑 119 Ambulans</a>
+    <div class="bungkus">
+      <a href="tel:112" class="tombol-darurat darurat-112" id="tel-112"><b>112</b><span>Darurat</span></a>
+      <a href="tel:119" class="tombol-darurat darurat-119" id="tel-119"><b>119</b><span>Ambulans</span></a>
+    </div>
   </nav>
 
-  <footer class="kaki">
-    <p>Program Siaga Asap IA-ITB Jambi 2026 · Data dari relawan, diverifikasi sebelum tampil.</p>
-    <p>Informasi kesehatan di sini bersifat umum, bukan pengganti pemeriksaan tenaga kesehatan.</p>
-    <p><a href="https://github.com/adprabowo/lawan-kabut-asap">Kode terbuka (MIT)</a></p>
-  </footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <script src="/ikon.js"></script>
   <script src="/panduan.js"></script>
   <script src="/app.js"></script>
 </body>

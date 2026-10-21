@@ -18,7 +18,8 @@ Relawan ─ Google Form ─ Google Sheet (privat) ─ Apps Script doGet (kolom p
 | `web/` | Web statis + PWA (dilayani Worker lewat static assets) |
 | `scripts/` | `deploy.sh` |
 | `test/` | Uji fungsi murni (`npm test`, Node 20+) |
-| `docs/` | Panduan penyiapan dan runbook |
+| `docs/` | Panduan penyiapan dan deploy |
+| `aset/` | Berkas sumber logo (tidak dideploy) |
 
 ## Status
 
@@ -37,6 +38,20 @@ Sheet adalah satu-satunya sumber data. Kolom `pengelola_wa`, `terverifikasi_oleh
 Entri baru dari Form tidak tampil sampai relawan verifikasi mencentang kolom `tampil`.
 Definisi kolom ada di [`apps-script/Skema.gs`](apps-script/Skema.gs).
 
+## Tampilan
+
+Beranda dibuka dengan "jendela langit": warna langit, kepekatan kabut, dan cahaya matahari mengikuti
+kategori ISPU lokasi yang dipilih, dengan skala lima kategori resmi. Gerak (kabut, angka, penanda
+skala, perpindahan halaman) dimatikan otomatis bila HP meminta gerak dikurangi. Untuk presentasi,
+buka web dengan `?demo=1` selama `MODE_CONTOH = "1"`: data contoh tampil dengan label yang jelas.
+
 ## Lisensi
 
-MIT. Daerah lain yang terdampak asap dipersilakan memakai dan menyesuaikan.
+Kode: MIT. Daerah lain yang terdampak asap dipersilakan memakai dan menyesuaikan.
+
+Bukan bagian dari lisensi MIT:
+
+- Logo IA-ITB Jambi, Jambi Digital Movement (JDM), dan Bakastra BPD HIPMI Jambi
+  (`web/logo/`, `aset/logo-asli/`) adalah milik organisasi masing-masing.
+- Huruf Archivo dan Plus Jakarta Sans: SIL Open Font License 1.1 (`web/fonts/LICENSE-*.txt`).
+- Sebagian besar ikon dari [Lucide](https://lucide.dev), lisensi ISC (keterangan di `web/ikon.js`).

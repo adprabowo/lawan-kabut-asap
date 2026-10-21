@@ -1,11 +1,14 @@
 // Panduan statis. Isi kesehatan perlu direview nakes mitra sebelum peluncuran (Hari 5).
+// `langkah` dipakai untuk urutan kerja yang memang berurutan; daftar biasa memakai <ul>.
 window.PANDUAN = [
   {
     slug: 'ispa',
+    ikon: 'stetoskop',
     judul: 'Gejala ISPA dan tanda bahaya',
+    ringkas: 'Kapan cukup dirawat di rumah, kapan harus ke IGD',
     html: `
       <div class="peringatan">
-        <strong>Segera ke IGD atau telepon 119 bila ada:</strong>
+        <p class="peringatan-judul">Segera ke IGD atau telepon 119 bila ada:</p>
         <ul>
           <li>sesak napas berat, napas sangat cepat, atau sulit bicara karena sesak</li>
           <li>bibir atau ujung jari kebiruan</li>
@@ -15,39 +18,43 @@ window.PANDUAN = [
           <li>penderita asma yang obat pelegaknya tidak menolong</li>
         </ul>
       </div>
-      <h3>Gejala umum</h3>
+      <h2>Gejala umum</h2>
       <p>Batuk, pilek, sakit tenggorokan, mata perih, sesak ringan, dan demam.</p>
-      <h3>Yang bisa dilakukan di rumah</h3>
-      <ol>
+      <h2>Yang bisa dilakukan di rumah</h2>
+      <ul>
         <li>Kurangi paparan asap: tetap di ruang bersih, tutup pintu dan jendela.</li>
         <li>Minum air putih yang cukup dan istirahat.</li>
         <li>Jangan memberi obat kepada anak tanpa petunjuk tenaga kesehatan.</li>
         <li>Periksa ke puskesmas bila tidak membaik dalam beberapa hari, atau segera bila termasuk kelompok rentan.</li>
-      </ol>
-      <h3>Kelompok rentan</h3>
+      </ul>
+      <h2>Kelompok rentan</h2>
       <p>Bayi, balita, anak, ibu hamil, lansia, dan penderita asma, PPOK, atau penyakit jantung.</p>`,
   },
   {
     slug: 'masker',
+    ikon: 'masker',
     judul: 'Memilih dan memakai masker',
+    ringkas: 'N95 atau KN95, dipakai rapat tanpa celah',
     html: `
-      <ol>
-        <li>Pilihan terbaik untuk asap adalah <strong>N95 atau KN95</strong> yang menempel rapat menutup hidung dan mulut, tanpa celah.</li>
+      <ul>
+        <li>Pilihan terbaik untuk asap adalah <strong>N95 atau KN95</strong> yang menempel rapat menutup hidung dan mulut.</li>
         <li>Masker bedah dan masker kain hanya sedikit menahan partikel asap halus (PM2.5). Lebih baik daripada tidak memakai, tapi bukan pilihan utama.</li>
-        <li>Tekan klip hidung sampai rapat. Kalau kacamata berembun, berarti masih ada celah.</li>
+        <li>Tekan klip hidung sampai rapat. Kalau kacamata berembun, masih ada celah.</li>
         <li>Ganti masker bila basah, kotor, rusak, atau terasa sulit bernapas.</li>
-      </ol>
+      </ul>
       <div class="peringatan">
-        <strong>Bayi dan balita tidak boleh memakai masker N95.</strong>
-        Lindungi mereka dengan tetap berada di ruang bersih.
+        <p class="peringatan-judul">Bayi dan balita tidak boleh memakai masker N95.</p>
+        <p>Lindungi mereka dengan tetap berada di ruang bersih.</p>
       </div>
       <p>Penderita penyakit jantung atau paru dan ibu hamil: tanyakan ke tenaga kesehatan bila terasa sesak saat memakai N95.</p>`,
   },
   {
     slug: 'ruang-bersih',
+    ikon: 'pintu',
     judul: 'Membuat ruang bersih di rumah',
+    ringkas: 'Satu kamar tertutup rapat dengan penyaring udara',
     html: `
-      <ol>
+      <ol class="langkah">
         <li>Pilih satu ruangan, sebaiknya kamar tidur, untuk seluruh keluarga.</li>
         <li>Tutup jendela dan pintu. Tutup celah dengan lakban, kain basah, atau plastik.</li>
         <li>Pasang penyaring udara atau <a href="#/panduan/kotak-udara-bersih">Kotak Udara Bersih</a> dan biarkan menyala.</li>
@@ -58,17 +65,19 @@ window.PANDUAN = [
   },
   {
     slug: 'kotak-udara-bersih',
+    ikon: 'kipas',
     judul: 'Merakit Kotak Udara Bersih',
+    ringkas: 'Penyaring murah dari kipas angin dan 4 filter',
     html: `
-      <p>Penyaring udara murah model Corsi-Rosenthal, bisa dirakit sendiri dalam 30 menit.</p>
-      <h3>Bahan</h3>
+      <p>Penyaring udara model Corsi-Rosenthal. Bisa dirakit sendiri dalam sekitar 30 menit.</p>
+      <h2>Bahan</h2>
       <ul>
         <li>1 kipas angin kotak (box fan) 20 inci</li>
         <li>4 filter udara/AC ukuran 20×20 inci, sebaiknya setara MERV 13</li>
         <li>Lakban dan karton</li>
       </ul>
-      <h3>Langkah</h3>
-      <ol>
+      <h2>Langkah</h2>
+      <ol class="langkah">
         <li>Susun 4 filter membentuk kubus. Panah aliran udara pada filter menghadap ke <strong>dalam</strong>.</li>
         <li>Lakban semua sambungan antarfilter sampai rapat.</li>
         <li>Letakkan kipas di atas kubus dengan hembusan mengarah <strong>keluar</strong>, sehingga kipas menyedot udara dari dalam kubus.</li>
@@ -80,14 +89,24 @@ window.PANDUAN = [
   },
   {
     slug: 'ispu',
+    ikon: 'ukur',
     judul: 'Arti angka ISPU',
+    ringkas: 'Lima kategori dan apa yang perlu dilakukan',
     html: `
-      <ul>
-        <li><strong>0–50 Baik:</strong> aktivitas normal.</li>
-        <li><strong>51–100 Sedang:</strong> kelompok sensitif kurangi aktivitas berat di luar.</li>
-        <li><strong>101–200 Tidak Sehat:</strong> kurangi aktivitas di luar. Kelompok rentan sebaiknya di dalam ruangan. Pakai N95/KN95 bila keluar.</li>
-        <li><strong>201–300 Sangat Tidak Sehat:</strong> hindari aktivitas di luar, tutup pintu dan jendela, gunakan ruang bersih.</li>
-        <li><strong>Di atas 300 Berbahaya:</strong> tetap di ruang bersih. Kelompok rentan pertimbangkan pindah ke Ruang Aman Asap. Keluar hanya bila perlu dengan N95/KN95.</li>
+      <p>ISPU (Indeks Standar Pencemar Udara) dipakai pemerintah untuk menyatakan mutu udara. Makin tinggi angkanya, makin berbahaya bagi kesehatan.</p>
+      <ul class="tangga-ispu">
+        <li style="--warna: var(--ispu-baik)"><span class="tangga-angka">0–50</span><strong>Baik</strong><span>Aktivitas normal.</span></li>
+        <li style="--warna: var(--ispu-sedang)"><span class="tangga-angka">51–100</span><strong>Sedang</strong><span>Kelompok sensitif kurangi aktivitas berat di luar.</span></li>
+        <li style="--warna: var(--ispu-tidak-sehat)"><span class="tangga-angka">101–200</span><strong>Tidak Sehat</strong><span>Kurangi aktivitas di luar. Kelompok rentan sebaiknya di dalam. Pakai N95/KN95 bila keluar.</span></li>
+        <li style="--warna: var(--ispu-sangat)"><span class="tangga-angka">201–300</span><strong>Sangat Tidak Sehat</strong><span>Hindari aktivitas di luar, tutup pintu dan jendela, gunakan ruang bersih.</span></li>
+        <li style="--warna: var(--ispu-berbahaya)"><span class="tangga-angka">&gt; 300</span><strong>Berbahaya</strong><span>Tetap di ruang bersih. Kelompok rentan pertimbangkan pindah ke Ruang Aman Asap. Keluar hanya bila perlu dengan N95/KN95.</span></li>
       </ul>`,
   },
+];
+
+// Ringkasan tanda bahaya di beranda; daftar lengkap ada di panduan ISPA.
+window.TANDA_BAHAYA = [
+  'Sesak napas berat atau sulit bicara',
+  'Bibir atau ujung jari kebiruan',
+  'Anak bernapas dengan dinding dada tertarik ke dalam',
 ];

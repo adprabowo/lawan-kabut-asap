@@ -150,6 +150,16 @@ test('/api/data memakai data contoh hanya bila MODE_CONTOH=1 dan KV kosong', asy
   assert.equal(res.status, 503);
 });
 
+test('?contoh=1 memberi data contoh hanya bila MODE_CONTOH=1, walau KV sudah berisi', async () => {
+  await worker.scheduled({}, env, ctx); await ctx.selesai();
+  let res = await worker.fetch(req('/api/data?contoh=1'), { ...env, MODE_CONTOH: '1' }, ctx);
+  assert.equal((await res.json()).contoh, true);
+  res = await worker.fetch(req('/api/data?contoh=1'), { ...env, MODE_CONTOH: '0' }, ctx);
+  const d = await res.json();
+  assert.equal(d.contoh, undefined);
+  assert.equal(d.ruang.length, 5);
+});
+
 test('rute tidak dikenal 404', async () => {
   assert.equal((await worker.fetch(req('/api/webhook'), env, ctx)).status, 404);
 });
