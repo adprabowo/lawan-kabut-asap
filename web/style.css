@@ -214,6 +214,8 @@ h1, h2, h3 { text-wrap: balance; }
 .pita .ikon { width: 18px; height: 18px; }
 
 main { display: block; padding-block: 16px 8px; }
+/* Kaki halaman selalu mulai di bawah layar, supaya tidak bergeser (CLS) saat isi selesai digambar. */
+.js main { min-height: 100vh; min-height: 100svh; }
 
 /* Fokus dipindah ke isi saat ganti halaman untuk pembaca layar; tidak perlu garis fokus. */
 #isi:focus, #isi:focus-visible { outline: none; }
