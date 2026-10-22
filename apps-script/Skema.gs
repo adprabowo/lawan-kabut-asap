@@ -29,7 +29,7 @@ const KOLOM_VERIFIKASI = [
 ];
 
 // Kolom yang tidak pernah keluar dari Apps Script.
-const KOLOM_PRIVAT = ['pengelola_wa', 'terverifikasi_oleh', 'catatan_internal', 'tampil'];
+const KOLOM_PRIVAT = ['pengelola_wa', 'terverifikasi_oleh', 'catatan_internal', 'tampil', 'kontak_pengirim'];
 
 const SKEMA = {
   ruang: {
@@ -107,6 +107,43 @@ const SKEMA = {
       prioritas: ['Mendesak', 'Tinggi', 'Biasa'],
     },
   },
+  // Kabar penting untuk warga (posko baru, layanan gratis, pengumuman resmi). Warga bisa mengirim
+  // lewat Form "Tambahkan info"; tampil setelah relawan mengecek sumbernya dan mencentang `tampil`.
+  info: {
+    judul: 'Informasi Terbaru',
+    judulForm: 'Kirim Informasi Terbaru',
+    direktori: true,
+    awalanId: 'I',
+    cekUlangHari: 7,
+    kolom: ['id', 'tanggal', 'judul', 'isi', 'sumber', 'kabupaten', 'tautan', 'label_tautan', 'kontak_pengirim'],
+    pilihan: {
+      kabupaten: ['Seluruh Provinsi Jambi'].concat(KABUPATEN),
+    },
+    labelForm: {
+      kabupaten: 'Wilayah yang dimaksud',
+    },
+  },
+  // Pendaftar relawan dari Form "Daftar Jadi Relawan". Seluruh tab privat (data pribadi):
+  // tidak pernah keluar dari Apps Script. Koordinator mengisi `status` setelah menghubungi.
+  relawan: {
+    judul: 'Pendaftar Relawan',
+    privat: true,
+    awalanId: 'V',
+    kolom: ['id', 'waktu', 'nama', 'wa', 'kabupaten', 'kecamatan', 'bidang', 'waktu_luang', 'pengalaman',
+      'status', 'catatan_internal'],
+    pilihan: {
+      kabupaten: KABUPATEN,
+      status: ['Baru', 'Sudah dihubungi', 'Aktif', 'Tidak aktif'],
+    },
+    pilihanGanda: {
+      bidang: ['Mendata dan mengecek tempat', 'Menjaga Ruang Aman Asap', 'Tenaga kesehatan',
+        'Logistik dan antar barang', 'Menjawab pertanyaan warga', 'Desain dan media sosial', 'Lainnya'],
+    },
+    labelForm: {
+      nama: 'Nama lengkap',
+      kabupaten: 'Domisili (kabupaten/kota)',
+    },
+  },
   udara: {
     judul: 'ISPU Terbaru',
     kolom: ['waktu', 'lokasi', 'ispu', 'kategori', 'sumber'],
@@ -134,8 +171,13 @@ function headerTab(tab) {
   return s.direktori ? s.kolom.concat(KOLOM_VERIFIKASI) : s.kolom.slice();
 }
 
-/** Kolom yang boleh dikeluarkan doGet. Tab log tidak punya kolom publik. */
+/** Kolom yang boleh dikeluarkan doGet. Tab log dan tab privat (relawan) tidak punya kolom publik. */
 function kolomPublik(tab) {
-  if (tab === 'log') return [];
+  if (!tabPublik(tab)) return [];
   return headerTab(tab).filter(function (k) { return KOLOM_PRIVAT.indexOf(k) === -1; });
+}
+
+/** Tab yang ikut dikirim doGet. */
+function tabPublik(tab) {
+  return tab !== 'log' && !SKEMA[tab].privat;
 }

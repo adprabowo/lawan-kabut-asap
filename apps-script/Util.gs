@@ -112,10 +112,10 @@ function nilaiJson_(v) {
  * Hanya kolom publik yang keluar; entri direktori hanya yang dicentang `tampil`;
  * FAQ hanya yang sudah direview; udara hanya pembacaan terbaru per lokasi.
  */
-function susunDataPublik(lembar, laporUrl) {
+function susunDataPublik(lembar, laporUrl, formUrl) {
   const hasil = { versi: 1 };
   Object.keys(SKEMA).forEach(function (tab) {
-    if (tab === 'log') return;
+    if (!tabPublik(tab)) return;
     const isi = lembar[tab] || { header: [], baris: [] };
     const publik = kolomPublik(tab);
     let baris = isi.baris.map(function (r) {
@@ -144,7 +144,12 @@ function susunDataPublik(lembar, laporUrl) {
       return p;
     });
   });
+  if (hasil.info) {
+    // Terbaru di atas; web dan bot menampilkan beberapa yang teratas.
+    hasil.info.sort(function (a, b) { return String(b.tanggal || '').localeCompare(String(a.tanggal || '')); });
+  }
   hasil.lapor_url = laporUrl || null;
+  hasil.form_url = formUrl || {};
   return hasil;
 }
 

@@ -32,8 +32,9 @@ const DIREKTORI = {
 };
 
 // Urutan menu beranda dan sitemap.
-const MENU = ['ruang', 'faskes', 'ambulans', 'kontak', 'oksigen', 'air-bersih', 'edukasi', 'donasi'];
-const JUDUL_MENU = { edukasi: 'Edukasi', donasi: 'Donasi' };
+const MENU = ['ruang', 'faskes', 'ambulans', 'kontak', 'oksigen', 'air-bersih', 'edukasi', 'donasi', 'info', 'kontribusi'];
+const JUDUL_MENU = { edukasi: 'Edukasi', donasi: 'Donasi', info: 'Informasi Terbaru', kontribusi: 'Cara Berkontribusi' };
+const HALAMAN_LAIN = ['edukasi', 'donasi', 'info', 'kontribusi'];
 
 export function esc(v) {
   return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -48,7 +49,7 @@ const nomorTel = (t) => String(t || '').replace(/[^\d+]/g, '');
 export function ruteHalaman(pathname) {
   const rute = pathname.replace(/^\/+/, '');
   if (rute.length > 1 && rute.endsWith('/')) return { alihkan: '/' + rute.replace(/\/+$/, '') };
-  if (rute === '' || DIREKTORI[rute] || rute === 'edukasi' || rute === 'donasi') return { rute };
+  if (rute === '' || DIREKTORI[rute] || HALAMAN_LAIN.includes(rute)) return { rute };
   if (rute === 'ruang/terdekat') return { rute: 'ruang' };
   const m = rute.match(/^panduan\/([a-z0-9-]+)$/);
   if (m && PANDUAN.some((p) => p.slug === m[1])) return { rute };
@@ -65,11 +66,14 @@ function entriDirektori(kunci, data) {
 }
 
 const barangDonasi = (data) => ((data && data.donasi) || []).filter((e) => e.jenis === 'Barang');
+const infoTerbaru = (data) => ((data && data.info) || []).filter((k) => k.judul);
+const urlAman = (u) => (/^https?:\/\//i.test(String(u || '')) ? String(u) : '');
 
 /** Halaman daftar yang sedang kosong tidak diindeks dan tidak masuk sitemap sampai ada isinya. */
 export function bolehDiindeks(rute, data) {
   if (DIREKTORI[rute]) return DIREKTORI[rute].selaluIsi || entriDirektori(rute, data).length > 0;
   if (rute === 'donasi') return ((data && data.donasi) || []).length > 0;
+  if (rute === 'info') return infoTerbaru(data).length > 0;
   return true;
 }
 
@@ -119,6 +123,10 @@ function htmlBeranda(data) {
     `<h2>Layanan</h2><ul>${layanan}</ul>` +
     '<h2>Segera ke IGD atau telepon 119 bila</h2><ul>' + globalThis.TANDA_BAHAYA.map((t) => `<li>${esc(t)}</li>`).join('') + '</ul>' +
     `<h2>Edukasi</h2><ul>${PANDUAN.map((p) => `<li><a href="/panduan/${p.slug}">${esc(p.judul)}</a>: ${esc(p.ringkas)}</li>`).join('')}</ul>` +
+    htmlInfoDaftar(infoTerbaru(data).slice(0, 3), 'Informasi terbaru') +
+    `<h2>Tanya lewat WhatsApp</h2><p>Bot relawan menjawab kapan saja: <a href="https://wa.me/${SEO.WA_BOT}?text=MENU">+${SEO.WA_BOT}</a>.</p>` +
+    '<h2>Cara berkontribusi</h2><ul><li><a href="/kontribusi#relawan">Daftar jadi relawan</a></li>' +
+    '<li><a href="/kontribusi#tambah-info">Tambahkan info</a></li><li><a href="/donasi">Donasi</a></li></ul>' +
     '<h2>Penyelenggara dan mitra</h2><p>Program Siaga Asap diselenggarakan Ikatan Alumni ITB Jambi (IA-ITB Jambi) bersama ' +
     'Jambi Digital Movement dan Bakastra BPD HIPMI Jambi.</p>';
 }
@@ -154,6 +162,43 @@ function htmlDirektori(kunci, data) {
   return html;
 }
 
+function tanggalWib(iso) {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return '';
+  const d = new Date(t + 7 * 3600e3);
+  return `${d.getUTCDate()} ${BULAN[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+function htmlInfoDaftar(info, judul) {
+  if (!info.length) return '';
+  return `<h2>${esc(judul)}</h2>` + info.map((k) => {
+    const meta = [k.sumber, tanggalWib(k.tanggal), k.kabupaten].filter(Boolean).map(esc).join(' · ');
+    const tautan = urlAman(k.tautan);
+    return `<article><h3>${esc(k.judul)}</h3>${meta ? `<p>${meta}</p>` : ''}${k.isi ? `<p>${esc(k.isi)}</p>` : ''}` +
+      (tautan ? `<p><a href="${esc(tautan)}" rel="noopener">${esc(k.label_tautan || 'Buka sumber')}</a></p>` : '') + '</article>';
+  }).join('');
+}
+
+function htmlInfo(data) {
+  const info = infoTerbaru(data);
+  return `<h1>Informasi Terbaru</h1><p>${esc(SEO.halaman.info.pembuka)}</p>` +
+    (info.length ? htmlInfoDaftar(info, `${info.length} informasi`) : '<p>Belum ada informasi terbaru yang sudah dicek relawan.</p>') +
+    '<p><a href="/kontribusi#tambah-info">Kirim informasi</a></p>';
+}
+
+function htmlKontribusi(data) {
+  const form = (data && data.form_url) || {};
+  const tautan = (tab, teks) => (urlAman(form[tab]) ? `<a href="${esc(form[tab])}" rel="noopener">${esc(teks)}</a>` : esc(teks));
+  return `<h1>Cara Berkontribusi</h1><p>${esc(SEO.halaman.kontribusi.pembuka)}</p>` +
+    '<h2 id="relawan">Daftar jadi relawan</h2><p>Bantu mendata dan mengecek tempat, menjaga Ruang Aman Asap, mengantar logistik, ' +
+    'atau menjawab pertanyaan warga. Data pendaftar hanya dilihat koordinator relawan.</p>' +
+    `<p>${tautan('relawan', 'Isi formulir relawan')}</p>` +
+    '<h2 id="tambah-info">Tambahkan info</h2><p>Semua kiriman dicek relawan dulu sebelum tampil.</p><ul>' +
+    [['info', 'Informasi terbaru'], ['ruang', 'Ruang Aman Asap'], ['oksigen', 'Penyedia oksigen'], ['air_bersih', 'Air bersih'],
+      ['kontak_darurat', 'Faskes, ambulans, kontak darurat']].map(([tab, teks]) => `<li>${tautan(tab, teks)}</li>`).join('') +
+    '</ul><h2 id="donasi">Donasi</h2><p><a href="/donasi">Lihat kebutuhan dan saluran donasi resmi</a></p>';
+}
+
 function htmlEdukasi() {
   const kelompok = [];
   PANDUAN.forEach((p) => {
@@ -183,7 +228,7 @@ function htmlDonasi(data) {
 
 function jsonLd(rute, meta) {
   const url = ASAL + '/' + rute;
-  const tipe = DIREKTORI[rute] || rute === 'edukasi' ? 'CollectionPage' : 'WebPage';
+  const tipe = DIREKTORI[rute] || rute === 'edukasi' || rute === 'info' ? 'CollectionPage' : 'WebPage';
   const halaman = {
     '@type': tipe, '@id': url + '#halaman', url, name: meta.judul, description: meta.deskripsi, inLanguage: 'id-ID',
     isPartOf: { '@id': ASAL + '/#website' }, publisher: { '@id': ASAL + '/#organisasi' },
@@ -238,6 +283,8 @@ export function htmlAwal(rute, data, tidakAda = false) {
   else if (DIREKTORI[rute]) isi = htmlDirektori(rute, data);
   else if (rute === 'edukasi') isi = htmlEdukasi();
   else if (rute === 'donasi') isi = htmlDonasi(data);
+  else if (rute === 'info') isi = htmlInfo(data);
+  else if (rute === 'kontribusi') isi = htmlKontribusi(data);
   else isi = htmlPanduan(rute);
   const remahan = daftarRemah(rute);
   return {
@@ -253,7 +300,7 @@ export function htmlAwal(rute, data, tidakAda = false) {
 export function sitemap(data, disimpanPada) {
   const tanggal = disimpanPada ? disimpanPada.slice(0, 10) : null;
   const rute = ['', ...MENU, ...PANDUAN.map((p) => 'panduan/' + p.slug)].filter((r) => bolehDiindeks(r, data));
-  const ikutData = (r) => r === '' || DIREKTORI[r] || r === 'donasi';
+  const ikutData = (r) => r === '' || DIREKTORI[r] || r === 'donasi' || r === 'info';
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     rute.map((r) => `  <url><loc>${ASAL}/${r}</loc>${tanggal && ikutData(r) ? `<lastmod>${tanggal}</lastmod>` : ''}</url>`).join('\n') +
     '\n</urlset>\n';

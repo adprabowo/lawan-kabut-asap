@@ -49,9 +49,12 @@ test('setiap layanan Google yang dipakai kode tercantum di oauthScopes appsscrip
   }
 });
 
-test('skema punya 8 tab: 7 tab rencana awal ditambah donasi', () => {
+test('skema punya 10 tab: rencana awal, donasi, info terbaru, dan relawan (privat)', () => {
   assert.deepEqual(Object.keys(ctx.SKEMA),
-    ['ruang', 'oksigen', 'air_bersih', 'kontak_darurat', 'donasi', 'udara', 'faq', 'log']);
+    ['ruang', 'oksigen', 'air_bersih', 'kontak_darurat', 'donasi', 'info', 'relawan', 'udara', 'faq', 'log']);
+  assert.equal(ctx.tabPublik('relawan'), false);
+  assert.equal(ctx.tabPublik('log'), false);
+  assert.equal(ctx.tabPublik('info'), true);
 });
 
 test('setiap pertanyaan Form punya label dan kolom tujuan di skema', () => {
@@ -63,7 +66,7 @@ test('setiap pertanyaan Form punya label dan kolom tujuan di skema', () => {
   for (const [tab, daftar] of Object.entries(ctxSetup.PERTANYAAN_FORM)) {
     const header = ctxSetup.headerTab(tab);
     for (const k of daftar) {
-      assert.ok(ctxSetup.LABEL_FORM[k], `label ${tab}.${k}`);
+      assert.ok(ctxSetup.LABEL_FORM[k] || (ctxSetup.SKEMA[tab].labelForm || {})[k], `label ${tab}.${k}`);
       if (k === 'lokasi') assert.ok(header.includes('lat') && header.includes('lng'), `${tab} butuh lat/lng`);
       else assert.ok(header.includes(k), `kolom ${tab}.${k}`);
     }
@@ -79,6 +82,8 @@ test('kolom privat tidak keluar lewat kolomPublik', () => {
     }
   }
   assert.equal(ctx.kolomPublik('log').length, 0);
+  assert.equal(ctx.kolomPublik('relawan').length, 0, 'data pendaftar relawan tidak boleh keluar');
+  assert.ok(!ctx.kolomPublik('info').includes('kontak_pengirim'));
   assert.ok(ctx.kolomPublik('ruang').includes('terverifikasi_pada'));
 });
 
@@ -194,7 +199,24 @@ test('susunDataPublik: hanya entri tampil, kolom publik, FAQ direview, udara ter
       ],
     },
   };
-  const d = JSON.parse(JSON.stringify(ctx.susunDataPublik(lembar, 'https://contoh/{bagian}/{kode}')));
+  const hInfo = ctx.headerTab('info');
+  const barisInfo = (isi) => hInfo.map((k) => (k in isi ? isi[k] : ''));
+  lembar.info = {
+    header: hInfo,
+    baris: [
+      barisInfo({ id: 'I001', tanggal: tgl('2026-10-20T02:00:00Z'), judul: 'Lama', isi: 'x', sumber: 'BPBD', tampil: true,
+        kontak_pengirim: '6281200000000' }),
+      barisInfo({ id: 'I002', tanggal: tgl('2026-10-22T02:00:00Z'), judul: 'Baru', isi: 'y', sumber: 'Dinkes', tampil: true }),
+      barisInfo({ id: 'I003', tanggal: tgl('2026-10-22T03:00:00Z'), judul: 'Belum dicek', isi: 'z', sumber: '?', tampil: false }),
+    ],
+  };
+  lembar.relawan = { header: ctx.headerTab('relawan'), baris: [['V001', '', 'Budi', '6281299999999']] };
+  const d = JSON.parse(JSON.stringify(ctx.susunDataPublik(lembar, 'https://contoh/{bagian}/{kode}',
+    { info: 'https://form/info', relawan: 'https://form/relawan' })));
+  assert.deepEqual(d.info.map((i) => i.judul), ['Baru', 'Lama']);
+  assert.ok(!('kontak_pengirim' in d.info[1]));
+  assert.ok(!('relawan' in d), 'tab relawan tidak boleh ikut dikirim');
+  assert.equal(d.form_url.relawan, 'https://form/relawan');
 
   assert.equal(d.ruang.length, 1);
   const r = d.ruang[0];

@@ -5,6 +5,8 @@
 globalThis.SEO = {
   ASAL: 'https://lawanasap.iaitbjambi.org',
   MEREK: 'Lawan Kabut Asap Jambi',
+  // Nomor bot WhatsApp (OpenClaw, agen lawan-kabut-asap). Dipakai tombol "Tanya lewat WhatsApp".
+  WA_BOT: '6285591643929',
   halaman: {
     '': {
       judul: 'Kabut Asap Jambi Hari Ini: Cek ISPU dan Ruang Aman Asap',
@@ -51,6 +53,16 @@ globalThis.SEO = {
       judul: 'Donasi Kabut Asap Jambi untuk Ruang Aman dan Posko',
       deskripsi: 'Bantu warga Jambi yang terdampak kabut asap: daftar kebutuhan barang ruang aman dan posko kesehatan, serta saluran donasi resmi dari pengurus IA-ITB Jambi.',
       pembuka: 'Donasi untuk warga Provinsi Jambi yang terdampak kabut asap, disalurkan ke ruang aman asap dan posko kesehatan Program Siaga Asap IA-ITB Jambi.',
+    },
+    info: {
+      judul: 'Informasi Terbaru Kabut Asap Jambi dari Relawan dan Instansi',
+      deskripsi: 'Kabar terbaru seputar kabut asap di Provinsi Jambi: posko dan layanan baru, pengumuman resmi, dan bantuan untuk warga, dicek relawan sebelum tampil.',
+      pembuka: 'Kabar terbaru seputar kabut asap di Provinsi Jambi yang dikirim warga, relawan, dan instansi, lalu dicek relawan Program Siaga Asap sebelum ditampilkan.',
+    },
+    kontribusi: {
+      judul: 'Bantu Warga Terdampak Asap Jambi: Relawan dan Tambah Info',
+      deskripsi: 'Cara membantu warga Jambi yang terdampak kabut asap: daftar jadi relawan, kirim info ruang aman, oksigen, air bersih, faskes, atau kabar terbaru, dan donasi.',
+      pembuka: 'Web ini diisi bersama: warga dan relawan mengirim informasi, relawan verifikasi mengeceknya, lalu informasinya tampil untuk semua. Ada tiga cara ikut membantu.',
     },
     'panduan/ispu': {
       judul: 'Arti Angka ISPU: 5 Kategori Kualitas Udara dan Sarannya',

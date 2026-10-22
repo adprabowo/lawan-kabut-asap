@@ -640,6 +640,92 @@ main { display: block; padding-block: 16px 8px; }
 
 .daftar-panduan .lihat-semua { grid-template-columns: 1fr auto; color: var(--nila); font-size: 15px; font-weight: 700; }
 
+/* ---------- tanya lewat WhatsApp ---------- */
+
+.ajak-wa {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px 14px;
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: var(--r);
+  background: var(--hijau-lembut);
+  color: var(--tinta);
+  text-decoration: none;
+  transition: transform .25s var(--gerak);
+}
+
+.ajak-wa:active { transform: scale(.985); }
+.ajak-wa-ikon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: var(--hijau); color: var(--permukaan); }
+.ajak-wa-ikon .ikon { width: 26px; height: 26px; }
+.ajak-wa-teks { display: grid; gap: 2px; min-width: 0; }
+.ajak-wa-teks strong { font: 800 17px/1.25 var(--huruf-tampil); }
+.ajak-wa-teks span { color: var(--redup); font-size: 14px; }
+.ajak-wa-aksi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  grid-column: 1 / -1;
+  padding: 12px 14px;
+  border-radius: var(--r-kecil);
+  background: var(--permukaan);
+  color: var(--hijau);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ajak-wa-aksi .ikon { transition: transform .3s var(--gerak); }
+.ajak-wa:hover .ajak-wa-aksi .ikon { transform: translateX(4px); }
+
+/* ---------- informasi terbaru ---------- */
+
+.judul-baris { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.judul-baris a { color: var(--nila); font-size: 15px; font-weight: 700; white-space: nowrap; }
+.daftar-kabar { display: grid; gap: 10px; }
+.kabar {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--garis);
+  border-left: 4px solid var(--nila);
+  border-radius: var(--r-kecil);
+  background: var(--permukaan);
+  scroll-margin-top: calc(var(--tinggi-kepala) + 16px);
+}
+
+.kabar-meta { margin: 0; color: var(--redup); font-size: 13px; font-weight: 600; }
+.kabar h3 { margin: 0; font: 800 17px/1.3 var(--huruf-tampil); letter-spacing: -.005em; }
+.kabar-isi { margin: 0; font-size: 15px; line-height: 1.5; white-space: pre-line; overflow-wrap: break-word; }
+.ringkas .kabar-isi { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.kabar-tautan { display: inline-flex; align-items: center; gap: 6px; justify-self: start; color: var(--nila); font-size: 14px; font-weight: 700; }
+.kabar-tautan .ikon { width: 16px; height: 16px; }
+
+/* ---------- kontribusi ---------- */
+
+.tumpuk { display: grid; gap: 12px; }
+.paragraf { max-width: 60ch; margin: 0 0 14px; font-size: 15px; line-height: 1.55; }
+.catatan-kosong { margin: 0; padding: 14px 16px; border-radius: var(--r-kecil); background: var(--permukaan-2); color: var(--redup); font-size: 14.5px; }
+.catatan-kosong a { color: var(--nila); font-weight: 700; }
+#relawan, #tambah-info, #donasi { scroll-margin-top: calc(var(--tinggi-kepala) + 16px); }
+
+.ajak-tambah {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border: 1px dashed var(--garis);
+  border-radius: var(--r-kecil);
+  color: var(--redup);
+  font-size: 14.5px;
+}
+
+.ajak-tambah .ikon { width: 20px; height: 20px; margin-top: 1px; color: var(--nila); }
+.ajak-tambah a { color: var(--nila); font-weight: 700; }
+
 /* ---------- donasi ---------- */
 
 .donasi-ajak {

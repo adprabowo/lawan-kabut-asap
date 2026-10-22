@@ -17,13 +17,18 @@ function doGet(e) {
   const ss = SpreadsheetApp.openById(PROP.getProperty('SHEET_ID'));
   const lembar = {};
   Object.keys(SKEMA).forEach(function (tab) {
-    if (tab === 'log') return;
+    if (!tabPublik(tab)) return;
     const sh = ss.getSheetByName(tab);
     if (!sh || sh.getLastRow() < 1) return;
     const nilai = sh.getDataRange().getValues();
     lembar[tab] = { header: nilai[0].map(String), baris: nilai.slice(1) };
   });
-  return balasJson_(susunDataPublik(lembar, PROP.getProperty('LAPOR_URL_TEMPLAT')));
+  const formUrl = {};
+  Object.keys(PERTANYAAN_FORM).forEach(function (tab) {
+    const url = PROP.getProperty('URL_FORM_' + tab);
+    if (url) formUrl[tab] = url;
+  });
+  return balasJson_(susunDataPublik(lembar, PROP.getProperty('LAPOR_URL_TEMPLAT'), formUrl));
 }
 
 function doPost(e) {

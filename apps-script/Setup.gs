@@ -27,9 +27,19 @@ const LABEL_FORM = {
   jam_layanan: 'Jam layanan',
   biaya: 'Biaya (contoh: gratis, atau Rp 150.000 dalam kota)',
   catatan_internal: 'Catatan untuk relawan verifikasi (tidak ditampilkan ke publik)',
+  judul: 'Judul singkat (contoh: Posko kesehatan gratis dibuka di Kelurahan X)',
+  isi: 'Isi informasi: apa, di mana, kapan, dan untuk siapa',
+  sumber: 'Sumber informasi (contoh: akun resmi BPBD Jambi, pengumuman kelurahan, atau "saya lihat langsung")',
+  tautan: 'Tautan sumber atau pendaftaran (opsional)',
+  kontak_pengirim: 'Nomor WhatsApp Anda untuk konfirmasi (TIDAK ditampilkan ke publik)',
+  wa: 'Nomor WhatsApp aktif',
+  bidang: 'Bisa membantu di bidang',
+  waktu_luang: 'Waktu luang (contoh: akhir pekan, malam hari, kapan saja)',
+  pengalaman: 'Pengalaman atau keahlian yang relevan (opsional)',
 };
 
-// Urutan pertanyaan Form per tab direktori. Tab tanpa entri di sini (donasi) tidak punya Form.
+// Urutan pertanyaan Form per tab. Tab tanpa entri di sini (donasi, udara, faq) tidak punya Form.
+// Semua Form ini publik: web menautkannya di "Tambahkan info" dan "Daftar jadi relawan".
 const PERTANYAAN_FORM = {
   ruang: ['nama', 'jenis', 'kabupaten', 'kecamatan', 'alamat', 'lokasi', 'layanan', 'jam_buka',
     'kapasitas', 'status', 'pengelola_wa', 'catatan_internal'],
@@ -39,11 +49,23 @@ const PERTANYAAN_FORM = {
     'wilayah_layanan', 'catatan_internal'],
   kontak_darurat: ['nama', 'jenis', 'kabupaten', 'kecamatan', 'alamat', 'lokasi', 'telepon',
     'jam_layanan', 'layanan', 'wilayah_layanan', 'biaya', 'catatan_internal'],
+  info: ['judul', 'isi', 'kabupaten', 'sumber', 'tautan', 'kontak_pengirim'],
+  relawan: ['nama', 'wa', 'kabupaten', 'kecamatan', 'bidang', 'waktu_luang', 'pengalaman'],
 };
 
-const WAJIB_FORM = ['nama', 'jenis', 'kabupaten'];
-const PARAGRAF_FORM = ['alamat', 'catatan_internal'];
-const KOLOM_WAKTU = ['diubah_pada', 'terverifikasi_pada', 'cek_ulang_sebelum', 'waktu', 'direview_pada'];
+// Pembuka Form. Form direktori dan info diisi warga; datanya tampil setelah dicek relawan.
+const DESKRIPSI_FORM = {
+  biasa: 'Terima kasih sudah berbagi informasi untuk warga terdampak kabut asap di Provinsi Jambi. ' +
+    'Data tidak langsung tampil: relawan akan mengecek dulu sebelum menampilkannya di ' +
+    'lawanasap.iaitbjambi.org.',
+  relawan: 'Terima kasih mau membantu warga terdampak kabut asap di Provinsi Jambi. Data Anda hanya ' +
+    'dilihat koordinator relawan Program Siaga Asap IA-ITB Jambi dan tidak pernah ditampilkan ke publik. ' +
+    'Koordinator akan menghubungi lewat WhatsApp.',
+};
+
+const WAJIB_FORM = ['nama', 'jenis', 'kabupaten', 'judul', 'isi', 'sumber', 'wa'];
+const PARAGRAF_FORM = ['alamat', 'catatan_internal', 'isi', 'pengalaman'];
+const KOLOM_WAKTU = ['diubah_pada', 'terverifikasi_pada', 'cek_ulang_sebelum', 'waktu', 'direview_pada', 'tanggal'];
 
 function siapkan() {
   const ss = siapkanStruktur_();
@@ -71,7 +93,7 @@ function siapkanStruktur_() {
 
 // Berubah setiap kali SKEMA, urutan pertanyaan, atau label Form di kode berubah.
 function sidikSkema_() {
-  const teks = JSON.stringify([SKEMA, PERTANYAAN_FORM, LABEL_FORM]);
+  const teks = JSON.stringify([SKEMA, PERTANYAAN_FORM, LABEL_FORM, DESKRIPSI_FORM]);
   return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, teks));
 }
 
@@ -145,14 +167,14 @@ function siapkanTab_(ss, tab) {
     if (KOLOM_WAKTU.indexOf(k) !== -1) badan.setNumberFormat('yyyy-mm-dd hh:mm');
     if (k === 'lat' || k === 'lng') badan.setNumberFormat('0.000000');
     // Nomor telepon disimpan sebagai teks supaya angka 0 di depan tidak hilang.
-    if (['pengelola_wa', 'kontak_publik', 'telepon'].indexOf(k) !== -1) badan.setNumberFormat('@');
+    if (['pengelola_wa', 'kontak_publik', 'telepon', 'wa', 'kontak_pengirim'].indexOf(k) !== -1) badan.setNumberFormat('@');
     if (KOLOM_PRIVAT.indexOf(k) !== -1) {
       sh.getRange(1, kol).setBackground('#f4cccc').setNote('Privat: tidak pernah dikirim ke web atau bot.');
     }
   });
-  if (tab === 'log') {
+  if (!tabPublik(tab)) {
     sh.getRange(1, 1, 1, kolomSheet.length).setBackground('#f4cccc');
-    sh.getRange(1, 1).setNote('Seluruh tab ini privat.');
+    sh.getRange(1, 1).setNote('Seluruh tab ini privat: tidak pernah dikirim ke web atau bot.');
   }
 }
 
@@ -168,9 +190,8 @@ function siapkanFormDirektori_(ss, tab) {
   if (PROP.getProperty(kunci)) return false;
 
   const s = SKEMA[tab];
-  const form = FormApp.create(judulForm_(s));
-  form.setDescription('Formulir relawan Siaga Asap Jambi. Data baru tidak langsung tampil: ' +
-    'relawan verifikasi akan mengecek dulu sebelum mencentang kolom "tampil".');
+  const form = FormApp.create(judulForm_(tab));
+  form.setDescription(deskripsiForm_(tab));
   form.setCollectEmail(false);
   form.setAllowResponseEdits(false);
 
@@ -180,17 +201,25 @@ function siapkanFormDirektori_(ss, tab) {
   });
 
   PROP.setProperty(kunci, form.getId());
+  PROP.setProperty('URL_FORM_' + tab, form.getPublishedUrl());
   PROP.setProperty('PETA_' + form.getId(), JSON.stringify({ tab: tab, item: peta }));
   pindahkanKeFolderSheet_(ss, form.getId());
   return true;
 }
 
-function judulForm_(s) {
+function judulForm_(tab) {
+  const s = SKEMA[tab];
+  if (tab === 'relawan') return 'Daftar Jadi Relawan — Siaga Asap Jambi';
+  if (tab === 'info') return s.judulForm + ' — Siaga Asap Jambi';
   return 'Input Data: ' + (s.judulForm || s.judul) + ' — Siaga Asap Jambi';
 }
 
+function deskripsiForm_(tab) {
+  return DESKRIPSI_FORM[tab] || DESKRIPSI_FORM.biasa;
+}
+
 function tambahPertanyaan_(form, s, k) {
-  const label = LABEL_FORM[k];
+  const label = (s.labelForm && s.labelForm[k]) || LABEL_FORM[k];
   let item;
   if (s.pilihan[k]) {
     item = form.addListItem().setTitle(label).setChoiceValues(s.pilihan[k]);
@@ -216,7 +245,10 @@ function lengkapiForm_(tab) {
   const peta = JSON.parse(PROP.getProperty(kunciPeta));
   const form = FormApp.openById(formId);
   const s = SKEMA[tab];
-  if (form.getTitle() !== judulForm_(s)) form.setTitle(judulForm_(s));
+  if (form.getTitle() !== judulForm_(tab)) form.setTitle(judulForm_(tab));
+  if (form.getDescription() !== deskripsiForm_(tab)) form.setDescription(deskripsiForm_(tab));
+  // URL publik disimpan supaya doGet tidak perlu membuka Form setiap 5 menit.
+  if (!PROP.getProperty('URL_FORM_' + tab)) PROP.setProperty('URL_FORM_' + tab, form.getPublishedUrl());
 
   const itemUntuk = function (kolom) {
     const id = Object.keys(peta.item).filter(function (i) { return peta.item[i] === kolom; })[0];

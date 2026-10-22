@@ -34,4 +34,10 @@ test('susun: status kini, tanda cek relawan, nomor nasional dibuang, umur ISPU',
   assert.match(malam, /ISPU 202.*SUDAH 11 JAM/);
   assert.match(malam, /JANGAN menyebut rekening/);
   assert.match(malam, /^# Data terkini/);
+  assert.match(malam, /JANGAN memberi tautan formulir/);
+  const lengkap = susun({ ...DATA, info: [{ judul: 'Posko baru', sumber: 'BPBD', tanggal: '2026-10-22T02:00:00Z', isi: 'Buka\n24 jam', tautan: 'javascript:x' }],
+    form_url: { relawan: 'https://forms.gle/r', info: 'ftp://x' } }, MALAM);
+  assert.match(lengkap, /- \*Posko baru\* \(BPBD, 22 Oktober\): Buka 24 jam$/m);
+  assert.match(lengkap, /- Daftar jadi relawan: https:\/\/forms\.gle\/r/);
+  assert.doesNotMatch(lengkap, /ftp:|javascript:/);
 });

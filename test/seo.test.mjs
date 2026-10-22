@@ -83,3 +83,29 @@ test('halaman tidak ada: 404, noindex, tanpa canonical', () => {
 test('waktuWib', () => {
   assert.equal(waktuWib('2026-10-21T17:30:00.000Z'), '00.30 WIB, 22 Oktober 2026');
 });
+
+test('info dan kontribusi: noindex bila info kosong, tautan non-http dibuang, form dari data', () => {
+  assert.deepEqual(ruteHalaman('/info'), { rute: 'info' });
+  assert.deepEqual(ruteHalaman('/kontribusi'), { rute: 'kontribusi' });
+  assert.equal(bolehDiindeks('info', DATA), false);
+  assert.doesNotMatch(sitemap(DATA, null), /\/info</);
+  assert.match(sitemap(DATA, null), /\/kontribusi</);
+
+  const data = {
+    ...DATA,
+    info: [
+      { id: 'I002', tanggal: '2026-10-22T02:00:00.000Z', judul: 'Posko baru', isi: 'Buka 24 jam', sumber: 'BPBD', tautan: 'javascript:alert(1)' },
+      { id: 'I001', tanggal: '2026-10-21T02:00:00.000Z', judul: 'Lama', isi: 'x', sumber: 'Dinkes', tautan: 'https://contoh.id/a' },
+    ],
+    form_url: { relawan: 'https://docs.google.com/forms/d/e/x/viewform' },
+  };
+  assert.equal(bolehDiindeks('info', data), true);
+  const info = htmlAwal('info', data);
+  assert.match(info.isi, /<h3>Posko baru<\/h3><p>BPBD · 22 Oktober 2026<\/p>/);
+  assert.doesNotMatch(info.isi, /javascript:/);
+  assert.match(info.isi, /href="https:\/\/contoh\.id\/a"/);
+  assert.match(htmlAwal('', data).isi, /Informasi terbaru/);
+  const k = htmlAwal('kontribusi', data);
+  assert.match(k.isi, /<a href="https:\/\/docs\.google\.com\/forms\/d\/e\/x\/viewform" rel="noopener">Isi formulir relawan<\/a>/);
+  assert.match(k.isi, /<li>Ruang Aman Asap<\/li>/, 'tanpa URL Form, teks tanpa tautan');
+});

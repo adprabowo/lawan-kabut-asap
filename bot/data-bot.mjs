@@ -97,6 +97,12 @@ export function susun(data, kini = Date.now()) {
   const ambulans = kontak.filter((e) => e.jenis === 'Ambulans');
   const lain = kontak.filter((e) => !JENIS_FASKES.includes(e.jenis) && e.jenis !== 'Ambulans');
   const donasi = data.donasi || [];
+  const info = (data.info || []).filter((k) => ada(k.judul)).slice(0, 5);
+  const form = data.form_url || {};
+  const urlForm = (tab) => (/^https?:\/\//.test(String(form[tab] || '')) ? form[tab] : null);
+  const FORM = [['relawan', 'Daftar jadi relawan'], ['info', 'Kirim informasi terbaru'], ['ruang', 'Tambah Ruang Aman Asap'],
+    ['oksigen', 'Tambah penyedia oksigen'], ['air_bersih', 'Tambah penyedia air bersih'],
+    ['kontak_darurat', 'Tambah faskes, ambulans, atau kontak darurat']].filter(([tab]) => urlForm(tab));
 
   const ispu = udara.length ? udara.map((u) => {
     const asal = u.sumber === 'PM2.5 BMKG' && typeof u.pm25 === 'number'
@@ -137,6 +143,18 @@ Web: ${ASAL}/ambulans
 
 ${bagianDaftar('Kontak darurat lain (BPBD, damkar, dll.)', lain, 'Belum ada kontak setempat di data. Pakai nomor nasional 112, 119, 113, 110.')}
 Web: ${ASAL}/kontak
+
+### Informasi terbaru (${info.length})
+${info.length ? info.map((k) => `- *${k.judul}* (${[k.sumber, ada(k.tanggal) ? tanggal(k.tanggal) : null, k.kabupaten].filter(ada).join(', ')})` +
+  `${ada(k.isi) ? ': ' + String(k.isi).replace(/\s+/g, ' ') : ''}${/^https?:\/\//.test(String(k.tautan || '')) ? ' Tautan: ' + k.tautan : ''}`).join('\n')
+    : 'Belum ada informasi terbaru yang sudah dicek relawan.'}
+Web: ${ASAL}/info
+
+### Formulir untuk warga yang ingin membantu (${FORM.length})
+${FORM.length ? FORM.map(([tab, teks]) => `- ${teks}: ${urlForm(tab)}`).join('\n')
+    : 'Formulir relawan dan tambah info sedang disiapkan pengurus. JANGAN memberi tautan formulir apa pun.'}
+Semua kiriman dicek relawan dulu sebelum tampil. Data salah: tombol "Laporkan data salah" di kartu tempat di web.
+Web: ${ASAL}/kontribusi
 
 ### Donasi (${donasi.length})
 ${donasi.length ? donasi.map((e) => `- ${e.jenis === 'Rekening' ? 'Rekening' : 'Barang'}: ${e.nama}${ada(e.detail) ? ', ' + e.detail : ''}` +

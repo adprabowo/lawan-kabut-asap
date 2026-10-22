@@ -42,21 +42,29 @@ function tambahEntri_(tab, jawaban) {
         .filter(String).join(' | ');
     }
   }
-  if (jawaban.pengelola_wa) jawaban.pengelola_wa = normalkanNomorWa(jawaban.pengelola_wa);
+  ['pengelola_wa', 'wa', 'kontak_pengirim'].forEach(function (k) {
+    if (jawaban[k]) jawaban[k] = normalkanNomorWa(jawaban[k]) || jawaban[k];
+  });
 
   const id = idBerikutnya(SKEMA[tab].awalanId, nilaiKolom_(sh, header, 'id'));
   jawaban.id = id;
   if (header.indexOf('kode') !== -1) jawaban.kode = id;
   jawaban.diubah_pada = sekarang;
   jawaban.tampil = false;
+  if (tab === 'info') jawaban.tanggal = sekarang;
+  if (tab === 'relawan') {
+    jawaban.waktu = sekarang;
+    jawaban.status = 'Baru';
+  }
 
   // Kotak centang `tampil` sudah terpasang sampai baris terbawah dan bernilai FALSE, sehingga
   // appendRow() akan menulis di bawah semua baris itu. Tulis di baris kosong pertama.
-  const nomorBaris = indeksBarisKosong(nilaiKolom_(sh, header, 'id'), nilaiKolom_(sh, header, 'nama')) + 2;
+  const kolomNama = header.indexOf('nama') !== -1 ? 'nama' : 'judul';
+  const nomorBaris = indeksBarisKosong(nilaiKolom_(sh, header, 'id'), nilaiKolom_(sh, header, kolomNama)) + 2;
   if (nomorBaris > sh.getMaxRows()) sh.insertRowsAfter(sh.getMaxRows(), 1);
   sh.getRange(nomorBaris, 1, 1, header.length)
     .setValues([header.map(function (k) { return jawaban[k] === undefined ? '' : jawaban[k]; })]);
-  tulisLog_(tab, id, '(baru)', '', jawaban.nama || '', 'Google Form');
+  tulisLog_(tab, id, '(baru)', '', jawaban.nama || jawaban.judul || '', 'Google Form');
 }
 
 /**
@@ -144,6 +152,7 @@ function saatSheetDiedit(e) {
           if (!baris.terverifikasi_oleh) baris.terverifikasi_oleh = oleh;
         }
       }
+      if (tab === 'info' && !baris.tanggal) baris.tanggal = sekarang;
       if (tab === 'udara') {
         if (kolomDiedit.indexOf('ispu') !== -1) baris.kategori = kategoriIspu(baris.ispu);
         if (!baris.waktu) baris.waktu = sekarang;
