@@ -5,11 +5,16 @@ compatibility_date = "2026-10-01"
 # Web statis (folder web/) dan API dilayani satu Worker: lawan-kabut-asap.<subdomain-akun>.workers.dev.
 # Alamat resmi https://lawanasap.iaitbjambi.org disambungkan dari zona iaitbjambi.org (akun Cloudflare lain),
 # jadi Worker melihat host workers.dev untuk kedua alamat; pengalihan dilakukan di web/index.html.
-# Hanya /api/* yang menjalankan kode Worker; file web dilayani langsung tanpa memakai kuota request Worker.
+# Kode Worker jalan untuk /api/*, halaman (HTML awal untuk mesin pencari), dan sitemap; file web lain
+# (CSS, JS, gambar, font) dilayani langsung tanpa memakai kuota request Worker.
 [assets]
 directory = "../web"
 binding = "ASSETS"
-run_worker_first = ["/api/*"]
+run_worker_first = [
+  "/api/*", "/", "/sitemap.xml", "/ruang", "/ruang/*", "/faskes", "/faskes/", "/oksigen", "/oksigen/",
+  "/air-bersih", "/air-bersih/", "/ambulans", "/ambulans/", "/kontak", "/kontak/", "/edukasi", "/edukasi/",
+  "/donasi", "/donasi/", "/panduan/*",
+]
 
 # Tarik data dari Apps Script tiap 5 menit.
 [triggers]

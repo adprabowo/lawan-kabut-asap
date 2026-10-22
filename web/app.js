@@ -1,4 +1,5 @@
-// Web app Lawan Kabut Asap: satu halaman, rute lewat hash, data dari /api/data.
+// Web app Lawan Kabut Asap: satu halaman, rute lewat path (/ruang, /panduan/ispa), data dari /api/data.
+// Worker mengirim HTML awal tiap path (judul, isi untuk mesin pencari); skrip ini lalu mengambil alih.
 (function () {
   'use strict';
 
@@ -18,7 +19,7 @@
       kosong: {
         judul: 'Belum ada ruang aman yang terverifikasi',
         teks: 'Relawan sedang mendata dan mengecek tempat. Sambil menunggu, siapkan satu ruangan bersih di rumah.',
-        tautan: '#/panduan/ruang-bersih', label: 'Cara membuat ruang bersih',
+        tautan: '/panduan/ruang-bersih', label: 'Cara membuat ruang bersih',
       },
     },
     oksigen: {
@@ -35,7 +36,7 @@
       kosong: {
         judul: 'Belum ada penyedia air bersih yang terverifikasi',
         teks: 'Relawan sedang mendata depot, tangki air, serta layanan PDAM dan BPBD.',
-        tautan: '#/', label: 'Kembali ke beranda',
+        tautan: '/', label: 'Kembali ke beranda',
       },
     },
     // Tiga menu berikut berbagi tab kontak_darurat dan dipisah menurut kolom `jenis`.
@@ -57,7 +58,7 @@
       kosong: {
         judul: 'Layanan ambulans setempat sedang didata',
         teks: 'Sementara itu, telepon 119 untuk ambulans gawat darurat. Layanan ini tersedia 24 jam.',
-        tautan: '#/panduan/ispa', label: 'Kenali tanda bahaya ISPA',
+        tautan: '/panduan/ispa', label: 'Kenali tanda bahaya ISPA',
       },
     },
     kontak: {
@@ -67,7 +68,7 @@
       kosong: {
         judul: 'Kontak lain sedang disiapkan',
         teks: 'Nomor darurat nasional di atas bisa dipakai kapan saja.',
-        tautan: '#/faskes', label: 'Lihat rumah sakit dan faskes',
+        tautan: '/faskes', label: 'Lihat rumah sakit dan faskes',
       },
     },
   };
@@ -77,14 +78,14 @@
   // Menu beranda: 4 x 2 ikon. Warna menandai kelompok: tempat dan pasokan, medis dan darurat,
   // edukasi, donasi.
   const MENU = [
-    ['#/ruang', 'ruang-aman', 'Ruang aman', 'nila'],
-    ['#/faskes', 'rs', 'Rumah sakit', 'merah'],
-    ['#/ambulans', 'ambulans', 'Ambulans', 'merah'],
-    ['#/kontak', 'sirene', 'Kontak darurat', 'merah'],
-    ['#/oksigen', 'oksigen', 'Oksigen', 'nila'],
-    ['#/air-bersih', 'tetes', 'Air bersih', 'nila'],
-    ['#/edukasi', 'buku', 'Edukasi', 'hijau'],
-    ['#/donasi', 'donasi', 'Donasi', 'jingga'],
+    ['/ruang', 'ruang-aman', 'Ruang aman', 'nila'],
+    ['/faskes', 'rs', 'Rumah sakit', 'merah'],
+    ['/ambulans', 'ambulans', 'Ambulans', 'merah'],
+    ['/kontak', 'sirene', 'Kontak darurat', 'merah'],
+    ['/oksigen', 'oksigen', 'Oksigen', 'nila'],
+    ['/air-bersih', 'tetes', 'Air bersih', 'nila'],
+    ['/edukasi', 'buku', 'Edukasi', 'hijau'],
+    ['/donasi', 'donasi', 'Donasi', 'jingga'],
   ];
 
   const PRIORITAS = { Mendesak: ['Mendesak', 'merah', 0], Tinggi: ['Prioritas tinggi', 'kuning', 1], Biasa: ['Biasa', 'abu', 2] };
@@ -286,7 +287,7 @@
   }
 
   function htmlSaran(kat) {
-    return esc(kat.saran) + (kat.ruangAman ? ' <a href="#/ruang">Cari ruang aman</a>' : '');
+    return esc(kat.saran) + (kat.ruangAman ? ' <a href="/ruang">Cari ruang aman</a>' : '');
   }
 
   function htmlPilihLokasi(daftar, aktif) {
@@ -307,7 +308,7 @@
         '<p class="kategori kategori-kosong" id="langit-kategori">Angka ISPU belum masuk</p>' +
         '<p class="langit-ket">Angka diperbarui otomatis dari pengukuran PM2.5 BMKG setiap jam.</p></div></div>' +
         '<div class="tanah">' + htmlSkala(null) +
-        '<p class="saran">Sambil menunggu, <a href="#/panduan/ispu">pelajari arti setiap angka ISPU</a> dan apa yang perlu dilakukan.</p>' +
+        '<p class="saran">Sambil menunggu, <a href="/panduan/ispu">pelajari arti setiap angka ISPU</a> dan apa yang perlu dilakukan.</p>' +
         '</div></section>';
     }
     const u = udaraAktif(daftar);
@@ -440,14 +441,18 @@
   }
 
   function htmlBarisPanduan(p) {
-    return '<li><a href="#/panduan/' + p.slug + '"><span class="panduan-ikon">' + ikon(p.ikon) + '</span>' +
+    return '<li><a href="/panduan/' + p.slug + '"><span class="panduan-ikon">' + ikon(p.ikon) + '</span>' +
       '<span class="panduan-teks"><strong>' + esc(p.judul) + '</strong><span>' + esc(p.ringkas) + '</span></span>' +
       ikon('kanan', 'kanan') + '</a></li>';
   }
 
+  // Remah roti sama dengan BreadcrumbList yang dikirim Worker: Beranda › (Edukasi ›) halaman ini.
   function htmlKepalaHalaman(kembali, judul, ket) {
+    const remah = '<nav class="remah" aria-label="Lokasi halaman"><ol><li><a href="/">Beranda</a></li>' +
+      (kembali === '/edukasi' ? '<li><a href="/edukasi">Edukasi</a></li>' : '') +
+      '<li aria-current="page">' + esc(judul) + '</li></ol></nav>';
     return '<div class="halaman-kepala muncul"><a class="tombol-ikon" href="' + kembali + '" aria-label="Kembali">' + ikon('kiri') + '</a>' +
-      '<div><h1>' + esc(judul) + '</h1><p>' + esc(ket) + '</p></div></div>';
+      '<div class="halaman-kepala-teks">' + remah + '<h1>' + esc(judul) + '</h1><p>' + esc(ket) + '</p></div></div>';
   }
 
   function halamanBeranda() {
@@ -463,7 +468,7 @@
       : 'Relawan sedang mendata tempat';
 
     const menu = '<nav class="menu-layanan" aria-label="Layanan">' + MENU.map(function (m, i) {
-      const lencana = m[0] === '#/ruang' && buka
+      const lencana = m[0] === '/ruang' && buka
         ? '<span class="menu-lencana" aria-hidden="true">' + buka + '</span>' : '';
       return '<a class="menu-item nada-' + m[3] + '" style="--j:' + i + '" href="' + m[0] + '">' +
         '<span class="menu-ikon">' + ikon(m[1]) + lencana + '</span><span class="menu-label">' + m[2] +
@@ -473,17 +478,17 @@
     const bahaya = '<div class="bahaya muncul" style="--i:3"><p class="bahaya-judul">' + ikon('bahaya') +
       'Segera ke IGD atau telepon 119 bila:</p><ul>' +
       window.TANDA_BAHAYA.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') +
-      '</ul><a href="#/panduan/ispa">Lihat semua tanda bahaya</a></div>';
+      '</ul><a href="/panduan/ispa">Lihat semua tanda bahaya</a></div>';
 
     const unggulan = ['ispa', 'masker', 'ruang-bersih', 'kotak-udara-bersih'].map(function (slug) {
       return window.PANDUAN.find(function (p) { return p.slug === slug; });
     }).filter(Boolean);
     const edukasi = '<ul class="daftar-panduan">' + unggulan.map(htmlBarisPanduan).join('') +
-      '<li><a class="lihat-semua" href="#/edukasi"><span>Lihat semua edukasi · ' + window.PANDUAN.length + ' materi</span>' +
+      '<li><a class="lihat-semua" href="/edukasi"><span>Lihat semua edukasi · ' + window.PANDUAN.length + ' materi</span>' +
       ikon('kanan', 'kanan') + '</a></li></ul>';
 
     const barang = kebutuhanBarang();
-    const donasi = '<a class="donasi-ajak" href="#/donasi">' +
+    const donasi = '<a class="donasi-ajak" href="/donasi">' +
       '<span class="donasi-ajak-kepala"><span class="donasi-ajak-ikon">' + ikon('donasi') + '</span>' +
       '<span class="donasi-ajak-teks"><strong>Donasi untuk warga terdampak asap</strong><span>' +
       (barang.length ? 'Kebutuhan ruang aman dan posko kesehatan saat ini:'
@@ -503,10 +508,10 @@
       '<div class="plat"><img src="/logo/bakastra-hipmi-jambi.webp" alt="Bakastra, Badan Kajian Strategis BPD HIPMI Jambi" width="202" height="52" loading="lazy"></div>' +
       '</div></div></div>';
 
-    return htmlLangit() +
+    return '<h1 class="sr">' + esc(window.SEO.halaman[''].h1) + '</h1>' + htmlLangit() +
       '<section class="panel-layanan muncul" style="--i:1" aria-label="Layanan">' + menu + '</section>' +
       '<section class="bagian bagian-rapat" aria-label="Ruang aman terdekat">' +
-      '<a class="ubin-utama muncul" style="--i:2" href="#/ruang/terdekat"><span class="ubin-ikon">' + ikon('ruang-aman') + '</span>' +
+      '<a class="ubin-utama muncul" style="--i:2" href="/ruang/terdekat"><span class="ubin-ikon">' + ikon('ruang-aman') + '</span>' +
       '<strong>Ruang Aman Asap</strong><span class="ubin-ringkas">' + ringkasRuang + '</span>' +
       '<span class="ubin-aksi">Cari yang terdekat dari saya' + ikon('kanan') + '</span></a>' + bahaya + '</section>' +
       '<section class="bagian muncul" style="--i:4" aria-labelledby="h-edukasi"><h2 class="judul-bagian" id="h-edukasi">Edukasi</h2>' +
@@ -582,7 +587,8 @@
     const lapor = tautanLapor(cfg, e.id);
 
     return '<article class="entri muncul" style="--i:' + Math.min(i, 8) + '">' + atas +
-      '<h3>' + esc(e.nama) + '</h3>' + (sub ? '<p class="entri-sub">' + sub + '</p>' : '') +
+      // Tanpa subjudul "Kontak lain"/"Ambulans setempat", nama tempat langsung di bawah h1.
+      (cfg.nasional ? '<h3>' : '<h2>') + esc(e.nama) + (cfg.nasional ? '</h3>' : '</h2>') + (sub ? '<p class="entri-sub">' + sub + '</p>' : '') +
       htmlFakta + pm25 + layanan + segar + (aksi.length ? '<div class="aksi">' + aksi.join('') + '</div>' : '') +
       (lapor ? '<a class="lapor" href="' + esc(lapor) + '" target="_blank" rel="noopener">' + ikon('bendera') + 'Laporkan data salah</a>' : '') +
       '</article>';
@@ -677,7 +683,7 @@
         (semua.length ? '' : tautanKosong) + '</div>';
 
     const judulLain = kunci === 'ambulans' ? 'Ambulans setempat' : 'Kontak lain';
-    return htmlKepalaHalaman('#/', cfg.judul, ringkasDirektori(cfg, semua)) +
+    return htmlKepalaHalaman('/', cfg.judul, ringkasDirektori(cfg, semua)) +
       (cfg.nasional ? htmlNasional(cfg.nasional) + (semua.length ? '<h2 class="judul-bagian">' + judulLain + '</h2>' : '') : '') +
       alat + daftar;
   }
@@ -694,7 +700,7 @@
       }
       k.isi.push(p);
     });
-    return htmlKepalaHalaman('#/', 'Edukasi', window.PANDUAN.length + ' materi tentang asap, kesehatan, dan pencegahan kebakaran') +
+    return htmlKepalaHalaman('/', 'Edukasi', window.PANDUAN.length + ' materi tentang asap, kesehatan, dan pencegahan kebakaran') +
       kelompok.map(function (k, i) {
         return '<section class="bagian bagian-edukasi muncul" style="--i:' + (i + 1) + '"><h2 class="judul-bagian">' + esc(k.nama) + '</h2>' +
           '<ul class="daftar-panduan">' + k.isi.map(htmlBarisPanduan).join('') + '</ul></section>';
@@ -706,7 +712,7 @@
     const p = daftar.find(function (x) { return x.slug === slug; });
     if (!p) return halamanTidakAda();
     const lanjut = daftar[(daftar.indexOf(p) + 1) % daftar.length];
-    return htmlKepalaHalaman('#/edukasi', p.judul, p.ringkas) +
+    return htmlKepalaHalaman('/edukasi', p.judul, p.ringkas) +
       '<article class="artikel muncul" style="--i:1">' + p.html + '</article>' +
       '<div class="artikel-kaki muncul" style="--i:2"><button type="button" class="tombol" data-bagikan="' + esc(p.judul) + '">' +
       ikon('bagikan') + 'Bagikan panduan ini</button></div>' +
@@ -754,7 +760,7 @@
       return '<div class="kosong muncul"><span class="kosong-ikon">' + ikon(ikonNama) + '</span><h2>' + judul + '</h2><p>' + teks + '</p></div>';
     };
 
-    return htmlKepalaHalaman('#/', 'Donasi', 'Bantu ruang aman dan posko kesehatan di Provinsi Jambi') +
+    return htmlKepalaHalaman('/', 'Donasi', 'Bantu ruang aman dan posko kesehatan di Provinsi Jambi') +
       '<div class="waspada muncul" style="--i:1">' + ikon('waspada') +
       '<p><strong>Donasi hanya lewat saluran resmi di halaman ini.</strong> Pengurus IA-ITB Jambi tidak pernah meminta transfer ke rekening pribadi lewat chat atau telepon.</p></div>' +
       '<section class="bagian" aria-labelledby="h-barang"><h2 class="judul-bagian" id="h-barang">Kebutuhan barang</h2>' +
@@ -769,7 +775,7 @@
 
   function halamanTidakAda() {
     return '<div class="kosong muncul"><h2>Halaman tidak ditemukan</h2><p>Tautan ini mungkin sudah berubah.</p>' +
-      '<a class="tombol" href="#/">Kembali ke beranda' + ikon('kanan') + '</a></div>';
+      '<a class="tombol" href="/">Kembali ke beranda' + ikon('kanan') + '</a></div>';
   }
 
   // ---------- data ----------
@@ -830,8 +836,34 @@
 
   // ---------- rute ----------
 
+  // Tautan lama berbentuk #/ruang (sudah tersebar di WhatsApp) dipindah ke path /ruang.
+  function pindahkanHashLama() {
+    if (!/^#\//.test(location.hash)) return;
+    history.replaceState(null, '', '/' + location.hash.slice(2).replace(/^\/+/, '') + location.search);
+  }
+
+  function ruteKini() {
+    return location.pathname.replace(/^\/+|\/+$/g, '');
+  }
+
+  function setMeta(sel, attr, nilai) {
+    const el = document.querySelector(sel);
+    if (el) el.setAttribute(attr, nilai);
+  }
+
+  // Judul tab, deskripsi, dan canonical mengikuti halaman (data di seo.js).
+  function perbaruiMeta(rute) {
+    const seo = window.SEO;
+    const p = rute.indexOf('panduan/') === 0 && window.PANDUAN.find(function (x) { return 'panduan/' + x.slug === rute; });
+    const m = seo.halaman[rute] || (p ? { judul: p.judul, deskripsi: p.ringkas } : null);
+    document.title = m ? m.judul : 'Halaman tidak ditemukan | ' + seo.MEREK;
+    if (!m) return;
+    setMeta('meta[name="description"]', 'content', m.deskripsi);
+    setMeta('link[rel="canonical"]', 'href', seo.ASAL + '/' + rute);
+  }
+
   function render() {
-    const rute = location.hash.replace(/^#\/?/, '');
+    const rute = ruteKini();
     const bagian = rute.split('/');
     const halaman = bagian[0];
     const ganti = rute !== ruteTerakhir;
@@ -848,6 +880,7 @@
     else html = halamanTidakAda();
 
     isi.innerHTML = html;
+    if (ganti) perbaruiMeta(rute === 'ruang/terdekat' ? 'ruang' : rute);
     if (ganti) {
       window.scrollTo(0, 0);
       isi.focus({ preventScroll: true });
@@ -855,7 +888,7 @@
     hidupkanLangit();
 
     if (halaman === 'ruang' && bagian[1] === 'terdekat') {
-      history.replaceState(null, '', '#/ruang');
+      history.replaceState(null, '', '/ruang' + location.search);
       ruteTerakhir = 'ruang';
       if (!posisi) cariPosisi();
     }
@@ -894,7 +927,7 @@
   }
 
   async function bagikan(judul) {
-    const url = location.origin + '/' + location.hash;
+    const url = location.origin + location.pathname;
     const teks = judul ? judul + ' · Lawan Kabut Asap Jambi' : 'Cek udara dan cari ruang aman asap terdekat di Jambi.';
     if (navigator.share) {
       try { await navigator.share({ title: 'Lawan Kabut Asap Jambi', text: teks, url: url }); } catch (e) { /* dibatalkan */ }
@@ -941,7 +974,24 @@
     }
   });
 
-  window.addEventListener('hashchange', navigasi);
+  // Tautan internal berpindah halaman tanpa memuat ulang; ?demo=1 dibawa supaya mode demo tidak hilang.
+  document.addEventListener('click', function (ev) {
+    if (ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+    const a = ev.target.closest('a[href^="/"]');
+    if (!a || a.target || a.hasAttribute('download')) return;
+    const url = new URL(a.href);
+    if (url.origin !== location.origin || /^\/api\/|\.[a-z0-9]+$/i.test(url.pathname)) return;
+    ev.preventDefault();
+    if (url.pathname !== location.pathname) history.pushState(null, '', url.pathname + (DEMO ? '?demo=1' : ''));
+    navigasi();
+  });
+
+  window.addEventListener('popstate', navigasi);
+  window.addEventListener('hashchange', function () {
+    if (!/^#\//.test(location.hash)) return;
+    pindahkanHashLama();
+    navigasi();
+  });
 
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState !== 'visible') return;
@@ -974,6 +1024,7 @@
     tombolPasang.hidden = true;
   });
 
+  pindahkanHashLama();
   muatData(true).then(render);
 
   if ('serviceWorker' in navigator) {

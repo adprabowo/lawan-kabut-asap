@@ -740,6 +740,12 @@ main { display: block; padding-block: 16px 8px; }
 /* ---------- halaman direktori ---------- */
 
 .halaman-kepala { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 6px; }
+.halaman-kepala-teks { min-width: 0; }
+.remah ol { display: flex; margin: 0; padding: 0; list-style: none; font-size: 13px; font-weight: 500; color: var(--redup); }
+.remah li { white-space: nowrap; }
+.remah li + li::before { content: "›"; margin: 0 6px; }
+.remah li:last-child { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.remah a { color: inherit; }
 .halaman-kepala h1 { margin: 2px 0 0; font: 800 clamp(24px, 7vw, 30px)/1.1 var(--huruf-tampil); letter-spacing: -.015em; }
 .halaman-kepala p { margin: 4px 0 0; color: var(--redup); font-size: 14px; }
 
@@ -833,7 +839,7 @@ main { display: block; padding-block: 16px 8px; }
 
 .jarak { color: var(--nila); font: 800 14px var(--huruf-tampil); font-variant-numeric: tabular-nums; }
 
-.entri h3 { margin: 0; font: 800 18px/1.25 var(--huruf-tampil); letter-spacing: -.01em; }
+.entri h2, .entri h3 { margin: 0; font: 800 18px/1.25 var(--huruf-tampil); letter-spacing: -.01em; }
 .entri-sub { margin: 3px 0 0; color: var(--redup); font-size: 14px; }
 
 .fakta { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; font-size: 14.5px; list-style: none; }
@@ -1073,3 +1079,14 @@ main { display: block; padding-block: 16px 8px; }
   .kepul { display: none; }
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 }
+
+/* HTML awal dari Worker: dibaca mesin pencari dan HP tanpa JavaScript, disembunyikan bila app.js jalan. */
+.js .pra { display: none; }
+html:not(.js) .langit.memuat, html:not(.js) .kerangka-ubin { display: none; }
+.pra { padding-block: 16px 32px; line-height: 1.55; }
+.pra h1 { margin: 8px 0; font: 800 clamp(24px, 7vw, 30px)/1.15 var(--huruf-tampil); }
+.pra h2 { margin: 24px 0 8px; font: 800 19px/1.25 var(--huruf-tampil); }
+.pra h3 { margin: 0; font: 800 17px/1.3 var(--huruf-tampil); }
+.pra ul { padding-left: 20px; }
+.pra ul > li + li { margin-top: 8px; }
+.pra li p { margin: 2px 0; }

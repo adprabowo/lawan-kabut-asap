@@ -1,7 +1,7 @@
 // Panduan statis. Isi kesehatan perlu direview nakes mitra sebelum peluncuran (Hari 5).
 // `langkah` dipakai untuk urutan kerja yang memang berurutan; daftar biasa memakai <ul>.
 // `kelompok` mengelompokkan materi di halaman Edukasi, sesuai urutan kemunculan.
-window.PANDUAN = [
+globalThis.PANDUAN = [
   {
     slug: 'ispu',
     kelompok: 'Kenali bahayanya',
@@ -37,7 +37,7 @@ window.PANDUAN = [
       <p>Api di lahan gambut bisa membara di bawah permukaan tanah selama berhari-hari. Asapnya terus keluar walau api di permukaan terlihat padam.</p>
       <div class="peringatan">
         <p class="peringatan-judul">Masker kain dan masker bedah tidak cukup.</p>
-        <p>Partikel PM2.5 lolos lewat celah dan serat kain. Pakai N95 atau KN95, dan buat <a href="#/panduan/ruang-bersih">ruang bersih</a> di rumah.</p>
+        <p>Partikel PM2.5 lolos lewat celah dan serat kain. Pakai N95 atau KN95, dan buat <a href="/panduan/ruang-bersih">ruang bersih</a> di rumah.</p>
       </div>`,
   },
   {
@@ -114,7 +114,7 @@ window.PANDUAN = [
         <li>Penderita asma: selalu bawa obat pelega dan ikuti rencana dari dokter.</li>
         <li>Bila gejala memburuk, jangan menunggu. Datangi faskes atau telepon 119.</li>
       </ul>
-      <p>Rumah terlalu berasap? Pertimbangkan pindah sementara ke <a href="#/ruang">Ruang Aman Asap</a>.</p>`,
+      <p>Rumah terlalu berasap? Pertimbangkan pindah sementara ke <a href="/ruang">Ruang Aman Asap</a>.</p>`,
   },
   {
     slug: 'ruang-bersih',
@@ -126,7 +126,7 @@ window.PANDUAN = [
       <ol class="langkah">
         <li>Pilih satu ruangan, sebaiknya kamar tidur, untuk seluruh keluarga.</li>
         <li>Tutup jendela dan pintu. Tutup celah dengan lakban, kain basah, atau plastik.</li>
-        <li>Pasang penyaring udara atau <a href="#/panduan/kotak-udara-bersih">Kotak Udara Bersih</a> dan biarkan menyala.</li>
+        <li>Pasang penyaring udara atau <a href="/panduan/kotak-udara-bersih">Kotak Udara Bersih</a> dan biarkan menyala.</li>
         <li>Jangan merokok, membakar obat nyamuk, menyalakan lilin atau dupa, atau memasak berasap di dalam.</li>
         <li>Bersihkan debu dengan kain basah atau pel, bukan sapu kering.</li>
         <li>Kalau memakai AC, pilih mode resirkulasi dan bersihkan filternya.</li>
@@ -178,7 +178,7 @@ window.PANDUAN = [
 ];
 
 // Ringkasan tanda bahaya di beranda; daftar lengkap ada di panduan ISPA.
-window.TANDA_BAHAYA = [
+globalThis.TANDA_BAHAYA = [
   'Sesak napas berat atau sulit bicara',
   'Bibir atau ujung jari kebiruan',
   'Anak bernapas dengan dinding dada tertarik ke dalam',

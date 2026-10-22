@@ -6,14 +6,22 @@
   <script>
     // Alamat lama workers.dev pindah ke domain resmi; path, query, dan # tetap.
     if (/\.workers\.dev$/.test(location.hostname)) location.replace('https://lawanasap.iaitbjambi.org' + location.pathname + location.search + location.hash);
+    // Isi HTML awal (untuk mesin pencari dan HP tanpa JavaScript) disembunyikan; app.js menggambar ulang.
+    document.documentElement.classList.add('js');
   </script>
-  <title>Lawan Kabut Asap Jambi</title>
-  <meta name="description" content="Kualitas udara, ruang aman asap, oksigen, air bersih, kontak darurat, dan panduan kesehatan saat kabut asap di Provinsi Jambi.">
+  <!-- Judul, deskripsi, canonical, dan og:* tiap halaman diganti Worker (worker/src/halaman.js, data di seo.js). -->
+  <title>Kabut Asap Jambi Hari Ini: Cek ISPU dan Ruang Aman Asap</title>
+  <meta name="description" content="ISPU Jambi hari ini untuk Kota Jambi dan Muaro Jambi, tiap jam dari PM2.5 BMKG. Cari ruang aman asap, rumah sakit, oksigen, dan nomor darurat terdekat.">
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#151931" media="(prefers-color-scheme: dark)">
-  <meta property="og:title" content="Lawan Kabut Asap Jambi">
-  <meta property="og:description" content="Cek udara, cari ruang aman asap, oksigen, dan air bersih terdekat di Jambi.">
-  <meta property="og:image" content="/logo/ia-itb-jambi.webp">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Lawan Kabut Asap Jambi">
+  <meta property="og:locale" content="id_ID">
+  <meta property="og:title" content="Kabut Asap Jambi Hari Ini: Cek ISPU dan Ruang Aman Asap">
+  <meta property="og:description" content="ISPU Jambi hari ini untuk Kota Jambi dan Muaro Jambi, tiap jam dari PM2.5 BMKG. Cari ruang aman asap, rumah sakit, oksigen, dan nomor darurat terdekat.">
+  <meta property="og:image" content="https://lawanasap.iaitbjambi.org/logo/ia-itb-jambi.webp">
+  <meta property="og:image:alt" content="Logo Ikatan Alumni ITB Jambi">
+  <meta name="twitter:card" content="summary">
   <link rel="canonical" href="https://lawanasap.iaitbjambi.org/">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -27,7 +35,7 @@
 
   <header class="kepala">
     <div class="bungkus">
-      <a href="#/" class="merek" aria-label="Lawan Kabut Asap, beranda">
+      <a href="/" class="merek" aria-label="Lawan Kabut Asap, beranda">
         <span class="merek-logo"><img src="/logo/ia-itb-jambi-kepala.webp" alt="Ikatan Alumni ITB Jambi" width="55" height="36"></span>
         <span class="merek-garis" aria-hidden="true"></span>
         <span class="merek-teks"><strong>Lawan Kabut Asap</strong><span>Program Siaga Asap · Jambi 2026</span></span>
@@ -78,6 +86,7 @@
 
   <script src="/ikon.js"></script>
   <script src="/panduan.js"></script>
+  <script src="/seo.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

@@ -6,10 +6,14 @@
  * POST /api/status   (Bearer BOT_TOKEN)  {kode, status, dari} dari pengelola ruang
  * POST /api/segarkan (Bearer BOT_TOKEN)  tarik ulang data sekarang, termasuk PM2.5 BMKG
  * cron tiap 5 menit                      tarik data dari Apps Script; PM2.5 BMKG tiap 15 menit
+ *
+ * Halaman (/, /ruang, /panduan/ispa, …) dan /sitemap.xml juga lewat sini: index.html diberi judul,
+ * deskripsi, JSON-LD, dan isi untuk mesin pencari (halaman.js). File web lain dilayani langsung.
  */
 import { bacaData, kirimStatus, segarkan } from './data.js';
 import { dataContoh } from './data-contoh.js';
 import { terdekat } from './geo.js';
+import { htmlAwal, ruteHalaman, sitemap } from './halaman.js';
 
 const JENIS_TERDEKAT = ['ruang', 'oksigen'];
 const STATUS_RUANG = ['BUKA', 'PENUH', 'TUTUP'];
@@ -98,10 +102,53 @@ async function apiStatus(request, env, ctx) {
   return json(hasil, hasil.ok ? 200 : 422);
 }
 
+async function halamanWeb(request, env, url) {
+  const rute = ruteHalaman(url.pathname);
+  if (!rute) return env.ASSETS.fetch(request);
+  if (rute.alihkan) return new Response(null, { status: 301, headers: { Location: rute.alihkan + url.search } });
+
+  // Hanya data asli dari KV; data contoh tidak boleh masuk HTML yang dibaca mesin pencari.
+  const simpanan = await bacaData(env);
+  let data = null;
+  try { data = simpanan ? JSON.parse(simpanan.teks) : null; } catch (e) { /* tampilkan tanpa data */ }
+  const awal = htmlAwal(rute.rute, data, rute.tidakAda);
+
+  const shell = await env.ASSETS.fetch(new Request(new URL('/', url), { headers: { Accept: 'text/html' } }));
+  const atur = (nilai) => ({ element(el) { el.setAttribute('content', nilai); } });
+  const hasil = new HTMLRewriter()
+    .on('title', { element(el) { el.setInnerContent(awal.judul); } })
+    .on('meta[name="description"]', atur(awal.deskripsi))
+    .on('meta[property="og:title"]', atur(awal.judul))
+    .on('meta[property="og:description"]', atur(awal.deskripsi))
+    .on('link[rel="canonical"]', { element(el) { if (awal.kanonik) el.setAttribute('href', awal.kanonik); else el.remove(); } })
+    .on('head', { element(el) { el.append(awal.kepala, { html: true }); } })
+    .on('main#isi', { element(el) { el.prepend(awal.isi, { html: true }); } })
+    .transform(shell);
+  const header = new Headers(hasil.headers);
+  header.set('Content-Type', 'text/html; charset=utf-8');
+  header.set('Cache-Control', 'public, max-age=0, must-revalidate');
+  header.delete('ETag');
+  return new Response(request.method === 'HEAD' ? null : hasil.body, { status: awal.status, headers: header });
+}
+
+async function apiSitemap(env) {
+  const simpanan = await bacaData(env);
+  let data = null;
+  try { data = simpanan ? JSON.parse(simpanan.teks) : null; } catch (e) { /* sitemap tanpa data */ }
+  return new Response(sitemap(data, simpanan && simpanan.metadata.disimpan_pada), {
+    headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+  });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
+    if (url.pathname === '/sitemap.xml') return apiSitemap(env);
+    if (!url.pathname.startsWith('/api/')) {
+      if (request.method !== 'GET' && request.method !== 'HEAD') return env.ASSETS.fetch(request);
+      return halamanWeb(request, env, url);
+    }
 
     const rute = `${request.method} ${url.pathname}`;
     switch (rute) {

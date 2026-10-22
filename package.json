@@ -3,7 +3,8 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "test": "node --test test/*.test.js test/*.test.mjs"
+    "test": "node --test test/*.test.js test/*.test.mjs",
+    "indexnow": "python3 -I ~/.claude/skills/seo-checklist/scripts/indexnow.py --site https://lawanasap.iaitbjambi.org --key 87c25dca2d00beb8c6f9c464022bae33"
   },
   "devDependencies": {
     "@google/clasp": "3.4.1"
