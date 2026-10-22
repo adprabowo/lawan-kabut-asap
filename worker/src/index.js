@@ -5,6 +5,7 @@
  * GET  /api/terdekat?lat=&lng=&jenis=&n=  entri terdekat: ruang | oksigen
  * POST /api/status   (Bearer BOT_TOKEN)  {kode, status, dari} dari pengelola ruang
  * POST /api/segarkan (Bearer BOT_TOKEN)  tarik ulang data sekarang, termasuk PM2.5 BMKG
+ * /api/admin/*                           dasbor admin, masuk dengan Google (admin.js)
  * cron tiap 5 menit                      tarik data dari Apps Script; PM2.5 BMKG tiap 15 menit
  *
  * Halaman (/, /ruang, /panduan/ispa, …) dan /sitemap.xml juga lewat sini: index.html diberi judul,
@@ -14,6 +15,7 @@ import { bacaData, kirimStatus, segarkan } from './data.js';
 import { dataContoh } from './data-contoh.js';
 import { terdekat } from './geo.js';
 import { htmlAwal, ruteHalaman, sitemap } from './halaman.js';
+import { apiAdmin } from './admin.js';
 
 const JENIS_TERDEKAT = ['ruang', 'oksigen'];
 const STATUS_RUANG = ['BUKA', 'PENUH', 'TUTUP'];
@@ -149,6 +151,8 @@ export default {
       if (request.method !== 'GET' && request.method !== 'HEAD') return env.ASSETS.fetch(request);
       return halamanWeb(request, env, url);
     }
+
+    if (url.pathname.startsWith('/api/admin/')) return apiAdmin(request, env, ctx, url);
 
     const rute = `${request.method} ${url.pathname}`;
     switch (rute) {

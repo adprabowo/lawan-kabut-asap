@@ -28,8 +28,13 @@ id = "39c064279718492f96c92af6096beb36"
 [vars]
 # "1" = /api/data memakai data contoh selama KV masih kosong (untuk demo). Set "0" sebelum peluncuran.
 MODE_CONTOH = "1"
+# Dasbor /admin: hanya email ini yang bisa masuk (boleh beberapa, dipisah koma).
+ADMIN_EMAIL = "hello.iaitbjambi@gmail.com"
+# Client ID OAuth Google (tipe Web application, origin https://lawanasap.iaitbjambi.org). Bukan rahasia.
+ADMIN_CLIENT_ID = ""
 
 # Rahasia, isi dengan `npx wrangler secret put <NAMA>` (jangan ditulis di sini):
 #   APPS_SCRIPT_URL    URL web app Apps Script (berakhiran /exec)
 #   APPS_SCRIPT_TOKEN  API_TOKEN dari Script Properties (dibuat otomatis oleh siapkan())
 #   BOT_TOKEN          token acak untuk bot WhatsApp
+#   ADMIN_SESSION_KEY  kunci acak penanda tangan cookie sesi dasbor admin

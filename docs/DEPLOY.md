@@ -170,6 +170,36 @@ skema (tab, kolom, pertanyaan Form) diterapkan sendiri oleh web app dalam 5 meni
 
 ---
 
+## Bagian D. Dasbor admin (/admin)
+
+`https://lawanasap.iaitbjambi.org/admin` menampilkan kiriman yang menunggu dicek, entri yang
+lewat batas cek ulang, pendaftar relawan, statistik, dan riwayat perubahan. Dari sana admin bisa
+menampilkan atau menyembunyikan entri, menandai sudah dicek, mengubah status relawan, dan menulis
+catatan internal; semuanya ditulis ke Sheet dan tercatat di tab `log` sebagai "Admin web <email>".
+
+Hanya email di `ADMIN_EMAIL` (`worker/wrangler.toml`) yang bisa masuk. Login memakai akun Google;
+Worker memeriksa tanda tangan token Google sendiri, lalu memberi cookie sesi 8 jam
+(ditandatangani dengan secret `ADMIN_SESSION_KEY`, sudah terpasang). Data admin diambil langsung
+dari Apps Script setiap kali dibuka dan tidak disimpan di KV.
+
+Sekali saja, buat client ID OAuth (gratis):
+
+1. Login sebagai hello.iaitbjambi@gmail.com, buka <https://console.cloud.google.com/apis/credentials>.
+   Bila diminta, buat project baru (misalnya `lawan-kabut-asap`).
+2. Bila diminta mengatur **OAuth consent screen**: User type **External**, nama aplikasi
+   `Lawan Kabut Asap Admin`, email dukungan hello.iaitbjambi@gmail.com. Tidak perlu scope tambahan.
+   Di bagian **Audience**, tambahkan hello.iaitbjambi@gmail.com sebagai test user (atau klik
+   **Publish app**; hanya email dan profil dasar, jadi tidak perlu verifikasi Google).
+3. **Create credentials → OAuth client ID**, tipe **Web application**.
+   Authorized JavaScript origins: `https://lawanasap.iaitbjambi.org`. Redirect URI dikosongkan.
+4. Salin **Client ID** (berakhiran `.apps.googleusercontent.com`, bukan rahasia) ke
+   `ADMIN_CLIENT_ID` di `worker/wrangler.toml`, lalu commit dan push.
+
+Menambah admin lain: tambahkan emailnya ke `ADMIN_EMAIL` (dipisah koma), commit, push.
+Mencabut akses: hapus emailnya; sesi yang masih terbuka langsung tidak berlaku.
+
+---
+
 ## Alur kerja relawan
 
 Lihat [SETUP.md](SETUP.md#3-alur-kerja-relawan): isi Form → relawan verifikasi mencentang

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script>
+    // Login Google hanya terdaftar untuk domain resmi.
+    if (/\.workers\.dev$/.test(location.hostname)) location.replace('https://lawanasap.iaitbjambi.org' + location.pathname + location.hash);
+  </script>
+  <title>Admin · Lawan Kabut Asap Jambi</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="same-origin">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#151931" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/plus-jakarta-sans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <header class="atas">
+    <div class="bungkus atas-isi">
+      <a class="merek" href="/" title="Buka web publik">
+        <img src="/icon.svg" alt="" width="28" height="28">
+        <span><strong>Admin</strong> Lawan Kabut Asap</span>
+      </a>
+      <div class="akun" id="akun" hidden>
+        <span class="email" id="email"></span>
+        <button type="button" class="tombol kecil" id="keluar">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="bungkus" id="isi">
+    <section class="kartu masuk" id="layar-masuk" hidden>
+      <h1>Dasbor admin</h1>
+      <p>Khusus pengurus Program Siaga Asap. Masuk dengan akun Google
+        <strong>hello.iaitbjambi@gmail.com</strong>; akun lain ditolak.</p>
+      <div id="tombol-google" class="tombol-google"></div>
+      <p class="pesan galat" id="galat-masuk" role="alert" hidden></p>
+    </section>
+
+    <p class="memuat" id="memuat">Memuat…</p>
+
+    <div id="dasbor" hidden>
+      <section class="ringkasan" aria-label="Ringkasan">
+        <a class="angka" href="#antrean"><span class="nilai" id="n-antrean">–</span><span class="label">Menunggu dicek</span></a>
+        <a class="angka" href="#cek-ulang"><span class="nilai" id="n-cek">–</span><span class="label">Perlu cek ulang</span></a>
+        <a class="angka" href="#relawan"><span class="nilai" id="n-relawan">–</span><span class="label">Relawan baru</span></a>
+        <a class="angka" href="#statistik"><span class="nilai" id="n-tayang">–</span><span class="label">Entri tayang</span></a>
+      </section>
+      <p class="sinkron" id="sinkron"></p>
+
+      <nav class="tab" aria-label="Bagian dasbor">
+        <a href="#antrean" data-tab="antrean">Antrean</a>
+        <a href="#cek-ulang" data-tab="cek-ulang">Cek ulang</a>
+        <a href="#relawan" data-tab="relawan">Relawan</a>
+        <a href="#statistik" data-tab="statistik">Statistik</a>
+        <a href="#riwayat" data-tab="riwayat">Riwayat</a>
+      </nav>
+
+      <div class="saring" id="saring">
+        <label>Kategori
+          <select id="saring-tab"><option value="">Semua</option></select>
+        </label>
+        <button type="button" class="tombol kecil" id="muat-ulang">Muat ulang</button>
+      </div>
+
+      <section id="panel" aria-live="polite"></section>
+    </div>
+  </main>
+
+  <div class="kabar-aksi" id="kabar" role="status" hidden></div>
+
+  <script src="/admin.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async></script>
+</body>
+</html>

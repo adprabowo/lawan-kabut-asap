@@ -238,3 +238,74 @@ test('bolehUbahStatus', () => {
   assert.equal(ctx.bolehUbahStatus('', '6281234567890'), false);
   assert.equal(ctx.bolehUbahStatus('6281234567890', ''), false);
 });
+
+test('susunDataAdmin: antrean, cek ulang, relawan, statistik, dan log (termasuk kolom privat)', () => {
+  // Tanggal dibuat di konteks vm supaya `instanceof Date` di kode Apps Script berlaku.
+  const tgl = (t) => vm.runInContext(`new Date('${t}')`, ctx);
+  const sekarang = tgl('2026-10-22T05:00:00Z');
+  const baris = (tab, nilai) => ctx.headerTab(tab).map((k) => (k in nilai ? nilai[k] : ''));
+  const lembar = {
+    ruang: {
+      header: ctx.headerTab('ruang'), gid: 11,
+      baris: [
+        baris('ruang', { id: 'R001', nama: 'Tayang segar', kabupaten: 'Kota Jambi', tampil: true,
+          cek_ulang_sebelum: tgl('2026-10-23T00:00:00Z'), pengelola_wa: '6281' }),
+        baris('ruang', { id: 'R002', nama: 'Kiriman baru', kabupaten: 'Bungo', tampil: false,
+          diubah_pada: tgl('2026-10-22T04:00:00Z'), pengelola_wa: '6282' }),
+        baris('ruang', { id: 'R003', nama: 'Lewat cek ulang', kabupaten: 'Kota Jambi', tampil: true,
+          cek_ulang_sebelum: tgl('2026-10-21T00:00:00Z') }),
+        baris('ruang', { nama: 'Belum ber-ID' }),
+      ],
+    },
+    info: { header: ctx.headerTab('info'), gid: 22,
+      baris: [baris('info', { id: 'I001', judul: 'Kabar', tampil: false, kontak_pengirim: '6283',
+        diubah_pada: tgl('2026-10-22T04:30:00Z') })] },
+    relawan: { header: ctx.headerTab('relawan'), gid: 33,
+      baris: [
+        baris('relawan', { id: 'V001', waktu: tgl('2026-10-20T00:00:00Z'), nama: 'Lama', status: 'Aktif' }),
+        baris('relawan', { id: 'V002', waktu: tgl('2026-10-22T00:00:00Z'), nama: 'Baru', wa: '6284', status: 'Baru' }),
+      ] },
+    log: { header: ctx.headerTab('log'),
+      baris: [[tgl('2026-10-21T00:00:00Z'), 'ruang', 'R001', 'tampil', false, true, 'a'],
+        [tgl('2026-10-22T00:00:00Z'), 'info', 'I001', 'judul', '', 'Kabar', 'b']] },
+  };
+  const d = JSON.parse(JSON.stringify(ctx.susunDataAdmin(lembar, sekarang, 'https://sheet/edit')));
+  assert.equal(d.admin, true);
+  assert.equal(d.sheet_url, 'https://sheet/edit');
+  assert.deepEqual(d.antrean.map((o) => o.id), ['I001', 'R002'], 'kiriman terbaru dulu, baris tanpa ID diabaikan');
+  assert.equal(d.antrean[1].pengelola_wa, '6282', 'admin melihat kolom privat');
+  assert.equal(d.antrean[1]._baris, 3);
+  assert.equal(d.antrean[1]._tab, 'ruang');
+  assert.deepEqual(d.cek_ulang.map((o) => o.id), ['R003']);
+  assert.deepEqual(d.relawan.map((r) => r.id), ['V002', 'V001']);
+  assert.equal(d.relawan[0].wa, '6284');
+  assert.deepEqual(d.statistik.tab.ruang, { tayang: 2, antrean: 1, cek_ulang: 1 });
+  assert.deepEqual(d.statistik.tab.info, { tayang: 0, antrean: 1, cek_ulang: 0 });
+  assert.deepEqual(d.statistik.tab.oksigen, { tayang: 0, antrean: 0, cek_ulang: 0 });
+  assert.deepEqual(d.statistik.kabupaten, { 'Kota Jambi': 2 });
+  assert.equal(d.tab.ruang.gid, 11);
+  assert.equal(d.tab.oksigen.gid, null);
+  assert.deepEqual(d.tab.relawan.pilihan_status, ['Baru', 'Sudah dihubungi', 'Aktif', 'Tidak aktif']);
+  assert.ok(!('udara' in d.tab) && !('faq' in d.tab) && !('log' in d.tab));
+  assert.deepEqual(d.log.map((l) => l.id), ['I001', 'R001'], 'riwayat terbaru dulu');
+});
+
+test('perubahanAdmin: hanya aksi dan tab yang diizinkan', () => {
+  const kini = new Date('2026-10-22T05:00:00Z');
+  const p = ctx.perubahanAdmin('ruang', 'tampilkan', '', kini, 'hello@x');
+  assert.equal(p.tampil, true);
+  assert.equal(p.terverifikasi_oleh, 'hello@x');
+  assert.equal(p.terverifikasi_pada.getTime(), kini.getTime());
+  assert.equal(p.cek_ulang_sebelum.toISOString(), '2026-10-23T05:00:00.000Z');
+  assert.deepEqual(JSON.parse(JSON.stringify(ctx.perubahanAdmin('ruang', 'sembunyikan', '', kini, 'a'))), { tampil: false });
+  const cek = ctx.perubahanAdmin('kontak_darurat', 'sudah_dicek', '', kini, 'a');
+  assert.ok(!('tampil' in cek));
+  assert.equal(cek.cek_ulang_sebelum.toISOString(), '2026-11-05T05:00:00.000Z');
+  assert.equal(ctx.perubahanAdmin('relawan', 'status', 'Aktif', kini, 'a').status, 'Aktif');
+  assert.equal(ctx.perubahanAdmin('relawan', 'status', 'Bos', kini, 'a').galat, 'aksi');
+  assert.equal(ctx.perubahanAdmin('relawan', 'tampilkan', '', kini, 'a').galat, 'aksi');
+  assert.equal(ctx.perubahanAdmin('info', 'catatan', 'x'.repeat(2000), kini, 'a').catatan_internal.length, 1000);
+  assert.equal(ctx.perubahanAdmin('udara', 'tampilkan', '', kini, 'a').galat, 'tab');
+  assert.equal(ctx.perubahanAdmin('log', 'catatan', 'x', kini, 'a').galat, 'tab');
+  assert.equal(ctx.perubahanAdmin('ruang', 'hapus', '', kini, 'a').galat, 'aksi');
+});

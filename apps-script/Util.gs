@@ -161,3 +161,103 @@ function bolehUbahStatus(pengelolaWa, dari) {
     return n && normalkanNomorWa(n) === pengirim;
   });
 }
+
+// ---------- Dasbor admin (/admin di web; hanya lewat Worker yang memegang token) ----------
+
+// Tab yang dikelola dasbor: semua tab direktori, plus pendaftar relawan (privat).
+function tabAdmin() {
+  return Object.keys(SKEMA).filter(function (t) { return SKEMA[t].direktori || t === 'relawan'; });
+}
+
+/**
+ * Susun JSON dasbor admin. `lembar` sama seperti susunDataPublik, ditambah `gid` per tab dan
+ * `log` (baris tab log). Berisi kolom privat, jadi hanya keluar untuk Worker yang memegang token.
+ * - antrean: entri direktori yang belum dicentang `tampil` (kiriman warga menunggu dicek)
+ * - cek_ulang: entri tayang yang `cek_ulang_sebelum`-nya sudah lewat
+ * - relawan: semua pendaftar, terbaru di atas
+ * - statistik: jumlah tayang/antrean/cek ulang per tab, dan entri tayang per kabupaten
+ */
+function susunDataAdmin(lembar, sekarang, sheetUrl) {
+  const hasil = {
+    ok: true, admin: true, dibuat: sekarang.toISOString(), sheet_url: sheetUrl || null,
+    tab: {}, antrean: [], cek_ulang: [], relawan: [], statistik: { tab: {}, kabupaten: {} }, log: [],
+  };
+  const jadiObjek = function (isi, tab) {
+    return isi.baris.map(function (r, i) {
+      const o = { _tab: tab, _baris: i + 2 };
+      isi.header.forEach(function (k, j) { o[k] = nilaiJson_(r[j]); });
+      return o;
+    }).filter(function (o) { return o.id; });
+  };
+
+  tabAdmin().forEach(function (tab) {
+    const s = SKEMA[tab];
+    const isi = lembar[tab] || { header: [], baris: [] };
+    hasil.tab[tab] = {
+      judul: s.judul, gid: isi.gid === undefined ? null : isi.gid,
+      cek_ulang_hari: s.cekUlangHari || null, pilihan_status: (s.pilihan && s.pilihan.status) || null,
+    };
+    const daftar = jadiObjek(isi, tab);
+    if (tab === 'relawan') {
+      hasil.relawan = daftar.sort(function (a, b) { return String(b.waktu || '').localeCompare(String(a.waktu || '')); });
+      return;
+    }
+    const st = { tayang: 0, antrean: 0, cek_ulang: 0 };
+    daftar.forEach(function (o) {
+      if (o.tampil !== true) {
+        st.antrean++;
+        hasil.antrean.push(o);
+        return;
+      }
+      st.tayang++;
+      if (o.kabupaten) hasil.statistik.kabupaten[o.kabupaten] = (hasil.statistik.kabupaten[o.kabupaten] || 0) + 1;
+      const batas = Date.parse(o.cek_ulang_sebelum || '');
+      if (!isNaN(batas) && batas < sekarang.getTime()) {
+        st.cek_ulang++;
+        hasil.cek_ulang.push(o);
+      }
+    });
+    hasil.statistik.tab[tab] = st;
+  });
+
+  // Kiriman terbaru dulu; cek ulang yang paling lama lewat dulu.
+  hasil.antrean.sort(function (a, b) { return String(b.diubah_pada || '').localeCompare(String(a.diubah_pada || '')); });
+  hasil.cek_ulang.sort(function (a, b) { return String(a.cek_ulang_sebelum).localeCompare(String(b.cek_ulang_sebelum)); });
+
+  const log = lembar.log || { header: [], baris: [] };
+  hasil.log = log.baris.slice(-40).reverse().map(function (r) {
+    const o = {};
+    log.header.forEach(function (k, j) { o[k] = nilaiJson_(r[j]); });
+    return o;
+  });
+  return hasil;
+}
+
+/**
+ * Kolom yang diubah oleh satu aksi dasbor admin, atau {galat}. `oleh` = email admin.
+ * tampilkan/sudah_dicek mengisi kolom verifikasi seperti centang `tampil` di Sheet.
+ */
+function perubahanAdmin(tab, aksi, nilai, sekarang, oleh) {
+  if (tabAdmin().indexOf(tab) === -1) return { galat: 'tab' };
+  const s = SKEMA[tab];
+  const verifikasi = function () {
+    return {
+      terverifikasi_pada: sekarang,
+      terverifikasi_oleh: oleh,
+      cek_ulang_sebelum: tambahHari(sekarang, s.cekUlangHari),
+    };
+  };
+  if (aksi === 'catatan') return { catatan_internal: String(nilai === undefined || nilai === null ? '' : nilai).slice(0, 1000) };
+  if (tab === 'relawan') {
+    if (aksi !== 'status' || s.pilihan.status.indexOf(nilai) === -1) return { galat: 'aksi' };
+    return { status: nilai };
+  }
+  if (aksi === 'tampilkan') {
+    const p = verifikasi();
+    p.tampil = true;
+    return p;
+  }
+  if (aksi === 'sembunyikan') return { tampil: false };
+  if (aksi === 'sudah_dicek') return verifikasi();
+  return { galat: 'aksi' };
+}
