@@ -1,41 +1,40 @@
 #!/usr/bin/env bash
-# Deploy Lawan Kabut Asap: Worker (web + API) ke Cloudflare, lalu Apps Script ke Google.
-# Token dibaca dari /root/.cloudflare-token (CLOUDFLARE_API_TOKEN=..., opsional CLOUDFLARE_ACCOUNT_ID=...).
-# Rahasia Apps Script opsional dari /root/.lawan-kabut-asap.env (APPS_SCRIPT_URL=..., APPS_SCRIPT_TOKEN=...).
-# Bagian Apps Script berjalan bila clasp sudah login (/root/.clasprc.json) dan apps-script/.clasp.json ada.
+# Deploy Apps Script Lawan Kabut Asap ke Google lewat clasp.
+# Worker (web + API) TIDAK dideploy dari sini: Cloudflare Workers Builds men-deploy-nya otomatis
+# tiap push ke main (build "cd worker && npm install", deploy "cd worker && npx wrangler deploy").
+#
+#   --rahasia  kirim juga APPS_SCRIPT_URL/APPS_SCRIPT_TOKEN/BOT_TOKEN ke Worker (hanya saat nilainya
+#              berubah). Token Cloudflare dibaca dari /root/.cloudflare-token.
+#
+# Rahasia Apps Script dari /root/.lawan-kabut-asap.env (APPS_SCRIPT_URL=..., APPS_SCRIPT_TOKEN=...).
+# Butuh clasp sudah login (/root/.clasprc.json) dan apps-script/.clasp.json (docs/DEPLOY.md bagian C).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$ROOT/worker"
+
+RAHASIA=0
+for arg in "$@"; do
+  case "$arg" in
+    --rahasia) RAHASIA=1 ;;
+    *) echo "Pilihan tidak dikenal: $arg (pakai --rahasia)"; exit 2 ;;
+  esac
+done
 
 set -a
-source /root/.cloudflare-token
 [ -f /root/.lawan-kabut-asap.env ] && source /root/.lawan-kabut-asap.env
 set +a
 
-npm install --silent
-npx wrangler whoami
+# ---------- Rahasia Worker (opsional) ----------
 
-# KV namespace dibuat sekali; id-nya ditulis ke wrangler.toml.
-if grep -q 'ISI_SETELAH_MEMBUAT_NAMESPACE' wrangler.toml; then
-  id=$(npx wrangler kv namespace list | node -e '
-    let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
-      const ns = JSON.parse(s).find((n) => n.title === "lawan-kabut-asap-DATA" || n.title === "DATA");
-      process.stdout.write(ns ? ns.id : "");
-    });')
-  if [ -z "$id" ]; then
-    id=$(npx wrangler kv namespace create DATA 2>&1 | grep -oE '[0-9a-f]{32}' | head -1)
-  fi
-  [ -n "$id" ] || { echo "Gagal membuat KV namespace"; exit 1; }
-  sed -i "s/ISI_SETELAH_MEMBUAT_NAMESPACE/$id/" wrangler.toml
-  echo "KV namespace: $id"
+if [ "$RAHASIA" = 1 ]; then
+  set -a
+  source /root/.cloudflare-token
+  set +a
+  cd "$ROOT/worker"
+  npm install --silent
+  for nama in APPS_SCRIPT_URL APPS_SCRIPT_TOKEN BOT_TOKEN; do
+    if [ -n "${!nama:-}" ]; then printf '%s' "${!nama}" | npx wrangler secret put "$nama"; fi
+  done
 fi
-
-npx wrangler deploy
-
-# Rahasia hanya dikirim kalau tersedia; Worker tetap jalan dengan data contoh tanpa rahasia ini.
-for nama in APPS_SCRIPT_URL APPS_SCRIPT_TOKEN BOT_TOKEN; do
-  if [ -n "${!nama:-}" ]; then printf '%s' "${!nama}" | npx wrangler secret put "$nama"; fi
-done
 
 # ---------- Apps Script ----------
 

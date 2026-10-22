@@ -55,12 +55,12 @@ lewat SSH. Kalau token bocor, cabut di halaman API Tokens (**Roll** atau **Delet
 
 ### A4. Deploy
 
-```
-scripts/deploy.sh
-```
+Web dan API dideploy otomatis oleh **Cloudflare Workers Builds** tiap ada push ke `main`
+(Workers & Pages → `lawan-kabut-asap` → Settings → Build: root `/`, build
+`cd worker && npm install`, deploy `cd worker && npx wrangler deploy`). Hasilnya terlihat di tab
+Deployments, biasanya 1–2 menit setelah push. Tidak perlu lagi menjalankan `wrangler deploy` dari VPS.
 
-Skrip ini mengecek token, membuat KV namespace (sekali saja), lalu men-deploy web dan API.
-Di akhir, wrangler mencetak alamat web.
+KV namespace sudah dibuat dan id-nya tercatat di `worker/wrangler.toml`.
 
 Cek:
 
@@ -138,13 +138,13 @@ Ketik di prompt Claude Code (ganti dua nilai):
 ! printf 'APPS_SCRIPT_URL=URL_EXEC\nAPPS_SCRIPT_TOKEN=API_TOKEN\n' > /root/.lawan-kabut-asap.env && chmod 600 /root/.lawan-kabut-asap.env
 ```
 
-Lalu jalankan lagi `scripts/deploy.sh`. Dalam 5 menit, cron Worker menarik data dari Sheet dan
+Lalu jalankan `scripts/deploy.sh --rahasia` (mengirim nilai itu sebagai secret Worker). Dalam 5 menit, cron Worker menarik data dari Sheet dan
 data contoh otomatis hilang. Kalau Sheet belum punya entri yang dicentang `tampil`, web
 menampilkan "Belum ada data".
 
 ### B6. Sebelum diumumkan ke publik
 
-1. Ubah `MODE_CONTOH = "1"` menjadi `"0"` di `worker/wrangler.toml`, lalu deploy ulang.
+1. Ubah `MODE_CONTOH = "1"` menjadi `"0"` di `worker/wrangler.toml`, lalu commit dan push ke `main`.
    Setelah itu data contoh tidak pernah muncul lagi.
 2. Minta nakes mitra mereview halaman Panduan (`web/panduan.js`).
 3. Coba di 2–3 HP berbeda, termasuk HP kelas bawah dan sinyal lemah.
@@ -153,7 +153,7 @@ menampilkan "Belum ada data".
 
 ## Bagian C. Deploy Apps Script otomatis
 
-Dilakukan sekali. Setelah itu `scripts/deploy.sh` juga memperbarui Apps Script, dan perubahan
+Dilakukan sekali. Setelah itu `scripts/deploy.sh` memperbarui Apps Script (Worker tidak lagi dideploy dari skrip ini), dan perubahan
 skema (tab, kolom, pertanyaan Form) diterapkan sendiri oleh web app dalam 5 menit.
 
 1. Login sebagai pemilik Apps Script (hello.iaitbjambi@gmail.com), buka
